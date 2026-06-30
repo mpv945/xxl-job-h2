@@ -5,7 +5,7 @@
 .classpath
 .project
 .DS_Store
-.gitattributes
+# .gitattributes
 
 # for fontend
 node_modules/
