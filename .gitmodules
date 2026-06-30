@@ -1,0 +1,3 @@
+[submodule "xxl-job"]
+	path = xxl-job
+	url = https://gitee.com/mpv945/xxl-job.git
