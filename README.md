@@ -259,6 +259,7 @@ git pull --recurse-submodules
 cd <你的子仓库文件夹路径>
 # 2. 查看当前状态，并切换到你需要开发的分支（例如 main 或 develop）
 git checkout main 【可选】
+
 第二步：在【子仓库】中提交并推送代码
 # 1. 暂存子仓库的修改
 git add .
