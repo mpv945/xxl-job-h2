@@ -1,0 +1,202 @@
+# 打包构建
+#FROM maven:3.9-eclipse-temurin-17 AS builder
+#
+#WORKDIR /build
+#
+#COPY . .
+#
+#RUN mvn clean package -DskipTests
+
+# 编译最小jre 运行时
+FROM eclipse-temurin:17-jdk AS jlink-builder
+
+#   --build-arg ROOT_PASSWORD=MyStrong@123 \
+ARG ROOT_PASSWORD=Root231@123456
+ENV ROOT_PASSWORD=${ROOT_PASSWORD}
+
+# ======================
+# build args
+# ======================
+ARG MYSQL_VERSION=9.7.1
+ARG GLIBC_VER=2.28
+# x86_64（默认）： docker build -t mysql:test . \
+# ARM64（M1 / ARM服务器）： docker build --platform=linux/arm64 -t mysql:test . \
+# 强制指定版本：  \
+# docker build \
+      #  --build-arg MYSQL_VERSION=9.7.1 \
+      #  --build-arg GLIBC_VER=2.28 \
+      #  -t mysql:test .
+
+# Docker自动提供：amd64 / arm64
+# Docker 自动变量：
+# | 变量             | 说明            |
+#| -------------- | ------------- |
+#| TARGETARCH     | amd64 / arm64 |
+#| TARGETOS       | linux         |
+#| TARGETPLATFORM | linux/amd64   |
+ARG TARGETARCH
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN set -eux; \
+    apt-get update ; \
+    apt-get install -y --no-install-recommends \
+        wget \
+        curl \
+        ca-certificates \
+        gnupg \
+        dirmngr \
+        unzip tar awk \
+        procps \
+        iproute2 net-tools iputils-ping lsof tree ; \
+    rm -rf /var/lib/apt/lists/* ; \
+    jlink \
+      --add-modules java.base,java.logging,java.sql,java.xml \
+      --compress=2 \
+      --strip-debug \
+      --no-header-files \
+      --no-man-pages \
+      --output /runtime/jre && \
+    \
+    # ======================
+    # 架构映射 \
+    # ======================
+    if [ "$TARGETARCH" = "amd64" ]; then \
+        MYSQL_ARCH="x86_64"; \
+    elif [ "$TARGETARCH" = "arm64" ]; then \
+        MYSQL_ARCH="aarch64"; \
+    else \
+        echo "Unsupported arch: $TARGETARCH"; exit 1; \
+    fi; \
+    \
+    MAJOR_MINOR=$(echo "$MYSQL_VERSION" | awk -F. '{print $1"."$2}'); \
+    FILE="mysql-${MYSQL_VERSION}-linux-glibc${GLIBC_VER}-${MYSQL_ARCH}-minimal.tar.xz"; \
+    # FILE="mysql-${MYSQL_VERSION}-linux-glibc${GLIBC_VER}-${MYSQL_ARCH}.tar.xz"; \
+    URL="https://dev.mysql.com/get/Downloads/MySQL-${MAJOR_MINOR}/${FILE}"; \
+    \
+    echo "Downloading $URL"; \
+    wget -O /tmp/${FILE} "$URL"; \
+    \
+    cd /tmp; \
+    tar -xf ${FILE}; \
+    \
+    mv mysql-${MYSQL_VERSION}-linux-glibc${GLIBC_VER}-${MYSQL_ARCH} /runtime/mysql-binary; \
+    \
+    rm -f /tmp/${FILE} && ls -lah /runtime/mysql-binary
+
+# 生成mysql 启动配置
+RUN set -eux; \
+    mkdir -p /runtime/mysql-binary/etc; \
+    printf '%s\n' \
+"[mysqld]" \
+"basedir=/runtime/mysql-binary" \
+"datadir=/runtime/mysql-binary/data/mysql" \
+"port=3306" \
+"" \
+"character-set-server=utf8mb4" \
+"collation-server=utf8mb4_general_ci" \
+"" \
+"skip-name-resolve" \
+"max_connections=500" \
+"" \
+"log_error=/runtime/mysql-binary/data/mysql/error.log" \
+> /runtime/mysql-binary/etc/my.cnf
+
+RUN set -eux; \
+    mkdir -p /runtime/supervisor.d; \
+    printf '%s\n' \
+"[supervisord]" \
+"nodaemon=true" \
+"" \
+"[program:mysql]" \
+"command=/runtime/mysql-binary/bin/mysqld --defaults-file=/runtime/mysql-binary/etc/my.cnf  --user=mysql" \
+"autostart=true" \
+"autorestart=true" \
+"priority=10" \
+"" \
+"[program:springboot]" \
+"command=java -jar /runtime/apps/pt1/app.jar --server.port=8080" \
+"autostart=true" \
+"autorestart=true" \
+"priority=20" \
+"stdout_logfile=/dev/stdout" \
+"stderr_logfile=/dev/stderr" \
+> /runtime/supervisor.d/supervisord.conf
+
+# 2️⃣ 转义 $（必须注意） 例如： \$DATADIR   【否则 Docker build 阶段就会提前展开变量 ❌】
+# 3️⃣ mysqld 多行命令安全写法： "\$MYSQL_BASE/bin/mysqld \\"  👉 关键是：外层字符串用 "..." 控制；内层 $ 必须 escape
+RUN set -eux; \
+    mkdir -p /runtime/init; \
+    printf '%s\n' \
+"#!/bin/bash" \
+"" \
+"set -e" \
+"" \
+"ROOT_PASSWORD=\"${ROOT_PASSWORD}\"" \
+"MYSQL_BASE=/runtime/mysql-binary" \
+"DATADIR=/runtime/mysql-binary/data/mysql" \
+#"ROOT_PASSWORD='Root@123456'" \
+"" \
+"echo \"[init] checking mysql data dir...\"" \
+"" \
+"if [ ! -d \"\$DATADIR/mysql\" ]; then" \
+"  echo \"[init] initializing mysql...\"" \
+"  \$MYSQL_BASE/bin/mysqld \\" \
+"    --initialize-insecure \\" \
+"    --user=mysql \\" \
+"    --basedir=\$MYSQL_BASE \\" \
+"    --datadir=\$DATADIR" \
+"" \
+"  echo \"[init] starting temporary mysql...\"" \
+"  \$MYSQL_BASE/bin/mysqld --user=mysql --datadir=\$DATADIR --skip-networking --socket=/tmp/mysql.sock &" \
+"" \
+"  pid=\$!" \
+"  sleep 5" \
+"" \
+"  echo \"[init] setting root password...\"" \
+"  \$MYSQL_BASE/bin/mysql --socket=/tmp/mysql.sock -uroot <<EOF" \
+"ALTER USER 'root'@'localhost' IDENTIFIED BY '\$ROOT_PASSWORD';" \
+"CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY '\$ROOT_PASSWORD';" \
+"GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;" \
+"FLUSH PRIVILEGES;" \
+"EOF" \
+"" \
+"  echo \"[init] shutting down temporary mysql...\"" \
+"  kill \$pid || true" \
+"fi" \
+"" \
+"echo \"[init] starting supervisor...\"" \
+"exec /usr/bin/supervisord -c /runtime/supervisor.d/supervisord.conf" \
+> /runtime/init/init.sh; \
+    chmod +x /runtime/init/init.sh
+
+COPY . .
+
+# ✔ 限制层级（最常用）： tree -L 2   ✔ 显示隐藏文件： tree -a  ✔ 显示文件大小：tree -h  ✔ 排除目录：tree -I "node_modules|.git"
+RUN tree -L 2 /runtime && tree -d -L 4 /runtime
+
+# 运行容器
+FROM gcr.io/distroless/base-debian12
+
+# WORKDIR /app
+
+# 复制最小 JRE
+COPY --from=jlink-builder /runtime /runtime
+
+# ENV JAVA_HOME=/runtime/jre
+# ENV PATH=$JAVA_HOME/bin:$PATH
+
+# =========================
+# 暴露端口
+# =========================
+EXPOSE 3306 8080
+
+# =========================
+# 2. 创建用户
+# =========================
+RUN JAVA_HOME=/runtime/jre && PATH=$JAVA_HOME/bin:$PATH && \
+    addgroup -S mysql && adduser -S mysql -G mysql && \
+    mkdir -p /data/mysql && \
+    chown -R mysql:mysql /data/mysql /opt/mysql && \
+    java -version
+

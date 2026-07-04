@@ -1,3 +1,5 @@
+envsubst < /etc/mysql/my.cnf.tpl > /etc/mysql/my.cnf
+
 可以用，而且这是**很典型的 MySQL 官方“二进制精简版 vs 完整版”选择问题**。
 
 https://dev.mysql.com/downloads/mysql/
