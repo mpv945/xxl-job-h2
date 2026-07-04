@@ -1,18 +1,8 @@
-# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
-
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-name: Java CI with Maven
-
+name: Sync Gitee to GitHub
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches: [ main, master, '*' ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -20,16 +10,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: maven
-    - name: Build with Maven
-      run: mvn -B package --file pom.xml
+      - name: Mirror the Github organization repos to Gitee.
+        uses: Yikun/hub-mirror-action@master
+        with:
+          src_endpoint: gitee.com
+          # 支持Gitee, Github, Gitlab and Gitcode
+          src: gitee/mpv945
+          # 支持Gitee, Github, Gitlab and Gitcode
+          src_token: ${{ secrets.GITEE_TOKEN }}
+          dst_endpoint: github.com
+          dst: gitee/mpv945
+          # dst_key: ${{ secrets.GITEE_PRIVATE_KEY }}
+          dst_token:  ${{ secrets.GITHUB_TOKEN }}
+          # 如果源端需要认证（如组织或私有仓库），请配置 src_token
+          # src_token: ${{ secrets.GITHUB_TOKEN }}
+          # account_type 默认为user，源和目的的账户类型，可以设置为org（组织）、user（用户）或者group（组），该参数支持同类型账户（即组织到组织，或用户到用户，或组到组）的同步。如果源目的仓库是不同类型，请单独使用src_account_type和dst_account_type配置。
+          # src_account_type 默认为account_type，源账户类型，可以设置为org（组织）、user（用户）或者group（组）。 gitee默认仓库创建在user下
+          # dst_account_type 默认为account_type，目的账户类型，可以设置为org（组织）、user（用户）或者group（组）。
+          # account_type: group
+          # src_account_type: org
+          #dst_account_type: group
 
-    # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
-    - name: Update dependency graph
-      uses: advanced-security/maven-dependency-submission-action@571e99aab1055c2e71a1e2309b9691de18d6b7d6
