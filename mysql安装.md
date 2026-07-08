@@ -1,4 +1,70 @@
+# 环境变量填充配置模板
+/etc/mysql/my.cnf.tpl
+[mysqld]
+basedir=/opt/mysql
+datadir=/data/mysql
+port=3306
+
+character-set-server=utf8mb4
+collation-server=utf8mb4_general_ci
+
+skip-name-resolve
+max_connections=500
+
+log_error=/data/mysql/error.log
+
+# password placeholder (not real value)
+root_password=${ROOT_PASSWORD}
+
+
+
+Dockerfile方式
+
+RUN set -eux; \
+mkdir -p /etc/mysql; \
+printf '%s\n' \
+"[mysqld]" \
+"basedir=/opt/mysql" \
+"datadir=/data/mysql" \
+"port=3306" \
+"" \
+"character-set-server=utf8mb4" \
+"collation-server=utf8mb4_general_ci" \
+"" \
+"skip-name-resolve" \
+"max_connections=500" \
+"" \
+"log_error=/data/mysql/error.log" \
+"" \
+"# runtime variable" \
+"root_password=\${ROOT_PASSWORD}" \
+> /etc/mysql/my.cnf.tpl
 envsubst < /etc/mysql/my.cnf.tpl > /etc/mysql/my.cnf
+
+GitHub 仓库快速导入Gitee 及同步更新：
+https://help.gitee.com/questions/GitHub%E4%BB%93%E5%BA%93%E5%BF%AB%E9%80%9F%E5%AF%BC%E5%85%A5Gitee%E5%8F%8A%E5%90%8C%E6%AD%A5%E6%9B%B4%E6%96%B0
+https://zhuanlan.zhihu.com/p/1895893136548558087
+
+Gitee 仓库快速导入GitHub 及同步更新：
+https://blog.csdn.net/w544924116/article/details/120479518
+
+一套代码，多窗口同步
+github创建一个新的空仓库： mpv945/xxl-job-h2
+
+添加GitHub远程源，命名为github
+git remote add github https://github.com/mpv945/xxl-job-h2.git
+# 查看远程地址，确认gitee与github均已绑定
+git remote -v
+# 推送所有分支
+git push github --all
+# 推送所有标签
+git push github --tags
+推送完成后，刷新GitHub仓库页面，即可看到与Gitee完全一致的代码与提交历史。
+方法2：GitHub快速导入（无本地环境），公开仓库无需账号和密码就能导入
+进入GitHub首页，点击「New repository」→「Import repository」
+填入Gitee仓库克隆地址，设置仓库名称与公开权限
+等待自动导入完成，适合临时快速迁移
+4374167ef977db8165d1a815ecfbc367
 
 可以用，而且这是**很典型的 MySQL 官方“二进制精简版 vs 完整版”选择问题**。
 

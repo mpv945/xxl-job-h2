@@ -275,4 +275,40 @@ git add .
 git commit -m "修改代码"
 git push -u origin "master"
 
+一个项目关联多个远程仓库
 
+方法1：每次push、pull时分开操作
+
+$ git remote -v
+首先，查看本地仓库所关联的远程仓库：（假定最初仅关联了一个远程仓库）
+origin  git@github.com:keithnull/keithnull.github.io.git (fetch)
+origin  git@github.com:keithnull/keithnull.github.io.git (push)
+然后，用 git remote add 添加一个远程仓库，其中name可以任意指定（对应上面的origin部分），比如：
+$ git remote add github https://github.com/mpv945/xxl-job-h2.git
+再次查看本地仓库所关联的远程仓库，可以发现成功关联了两个远程仓库：
+$ git remote -v
+github     git@git.coding.net:KeithNull/keithnull.github.io.git (fetch)
+github     git@git.coding.net:KeithNull/keithnull.github.io.git (push)
+origin  git@github.com:keithnull/keithnull.github.io.git (fetch)
+origin  git@github.com:keithnull/keithnull.github.io.git (push)
+此后，若需进行push 操作，则需要指定目标仓库，git push ，对这两个远程仓库分别操作：
+$ git push origin master
+$ git push github main
+同理，pull操作也需要指定从哪个远程仓库拉取 ，git pull ，从这两个仓库中选择其一：
+$ git pull origin master
+$ git pull github main
+
+方法2：push和pull无需额外操作
+同样地，先查看已有的远程仓库：（假定最初仅关联了一个远程仓库）
+$ git remote -v
+origin  git@github.com:keithnull/keithnull.github.io.git (fetch)
+origin  git@github.com:keithnull/keithnull.github.io.git (push)
+然后，不额外添加远程仓库，而是给现有的远程仓库添加额外的 URL。使用 git remote set-url -add ，给已有的名为name的远程仓库添加一个远程地址，比如：
+$ git remote set-url --add origin git@git.coding.net:KeithNull/keithnull.github.io.git
+再次查看所关联的远程仓库：
+$ git remote -v
+origin  git@github.com:keithnull/keithnull.github.io.git (fetch)
+origin  git@github.com:keithnull/keithnull.github.io.git (push)
+origin  git@git.coding.net:KeithNull/keithnull.github.io.git (push)
+可以看到，我们并没有如 方法1 一般增加远程仓库的数目，而是给一个远程仓库赋予了多个地址（或者准确地说，多个用于push的地址）。
+因此，这样设置后的push 和pull操作与最初的操作完全一致，不需要进行调整。
