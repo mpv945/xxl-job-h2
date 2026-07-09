@@ -596,3 +596,330 @@ git push origin master
 
 
 
+
+你现在的仓库状态：
+
+```
+本地 master
+   |
+   +---- origin  -> Gitee master
+   |
+   +---- github  -> GitHub main
+```
+
+注意一个关键点：
+
+* Gitee 默认是 `master`
+* GitHub 默认是 `main`
+
+你想要：
+
+1. **安全拉取两个远程最新代码**
+2. **确认差异**
+3. **整理成本地 master**
+4. **同时推送到 Gitee master 和 GitHub main**
+
+推荐不要直接 merge，而是先建立远程跟踪分支。
+
+---
+
+# 一、完整同步两个远程仓库
+
+## 1. 拉取所有远程信息
+
+```powershell
+git fetch --all --prune
+```
+
+结果类似：
+
+```
+Fetching github
+Fetching origin
+```
+
+现在本地拥有：
+
+```
+origin/master
+github/main
+```
+
+---
+
+## 2. 查看两个远程分支
+
+```powershell
+git branch -r
+```
+
+应该看到：
+
+```
+origin/master
+github/main
+```
+
+---
+
+## 3. 查看两个仓库历史差异
+
+### 查看 Gitee
+
+```powershell
+git log --oneline master..origin/master
+```
+
+含义：
+
+> Gitee 有、本地没有的提交
+
+---
+
+### 查看 GitHub
+
+```powershell
+git log --oneline master..github/main
+```
+
+含义：
+
+> GitHub main 有、本地没有的提交
+
+---
+
+也可以整体看：
+
+```powershell
+git log --graph --decorate --all --oneline
+```
+
+例如：
+
+```
+* abc222 (HEAD -> master)
+* abc111
+|
+| * 999aaa (github/main)
+|/
+| * 888bbb (origin/master)
+|/
+```
+
+---
+
+# 二、确定最终以哪个为准
+
+双仓库同步必须有一个主线。
+
+一般建议：
+
+```
+本地 master
+      |
+      |
+      +---- Gitee master
+      |
+      +---- GitHub main
+```
+
+即：
+
+**本地 master 是唯一源。**
+
+---
+
+# 三、如果本地 master 是正确版本
+
+先同步 Gitee：
+
+```powershell
+git push origin master --force-with-lease
+```
+
+然后同步 GitHub：
+
+因为 GitHub 分支叫 main：
+
+```powershell
+git push github master:main --force-with-lease
+```
+
+这里重点：
+
+```text
+master:main
+```
+
+表示：
+
+```
+本地 master
+       |
+       v
+GitHub main
+```
+
+---
+
+最终：
+
+```
+本地 master
+
+        push
+          |
+          |
+   +------+------+
+   |             |
+Gitee master   GitHub main
+```
+
+---
+
+# 四、如果 GitHub main 才是最新
+
+例如：
+
+```
+github/main
+      |
+      A
+      B
+      C
+
+origin/master
+      |
+      A
+      B
+```
+
+那么先合并 GitHub：
+
+```powershell
+git checkout master
+
+git merge github/main
+```
+
+解决冲突：
+
+```powershell
+git add .
+git commit
+```
+
+然后：
+
+推 Gitee：
+
+```powershell
+git push origin master
+```
+
+推 GitHub：
+
+```powershell
+git push github master:main
+```
+
+---
+
+# 五、如果 Gitee master 才是最新
+
+类似：
+
+```powershell
+git merge origin/master
+```
+
+然后：
+
+```powershell
+git push origin master
+
+git push github master:main
+```
+
+---
+
+# 六、建议配置：以后一个命令推两个仓库
+
+你的 `.git/config` 可以改成：
+
+```ini
+[remote "origin"]
+    url = https://gitee.com/mpv945/xxl-job-h2.git
+    fetch = +refs/heads/*:refs/remotes/origin/*
+    pushurl = https://gitee.com/mpv945/xxl-job-h2.git
+    pushurl = https://github.com/mpv945/xxl-job-h2.git
+```
+
+但是这里有一个问题：
+
+GitHub 是 `main`，Gitee 是 `master`。
+
+所以更推荐：
+
+增加一个 push alias：
+
+```bash
+git remote add all https://gitee.com/mpv945/xxl-job-h2.git
+
+git remote set-url --add --push all https://gitee.com/mpv945/xxl-job-h2.git
+
+git remote set-url --add --push all https://github.com/mpv945/xxl-job-h2.git
+```
+
+以后：
+
+```bash
+git push all master:master
+git push all master:main
+```
+
+---
+
+# 七、针对你当前仓库，我建议执行顺序
+
+你现在已经 rebase 过，本地大概率是正确版本。
+
+执行：
+
+```powershell
+git fetch --all --prune
+
+git log --graph --decorate --all --oneline -20
+```
+
+确认。
+
+如果本地 master 是最终版本：
+
+```powershell
+git push origin master --force-with-lease
+
+git push github master:main --force-with-lease
+```
+
+这样：
+
+✅ Gitee master 更新
+✅ GitHub main 更新
+✅ 保留本地整理后的 commit 历史
+✅ 不会因为 unrelated histories 再冲突
+
+这是维护 Gitee + GitHub 双仓库最稳的方式。
+
+
+
+
+# 确认本地和两个远程状态:  
+git fetch --all
+git log --oneline --graph --decorate --all -20
+git rebase -i HEAD~2  目的应该是整理提交。 git log --oneline --decorate -20 (如果你想修改两个：,就倒数两行)
+你应该让 Gitee 跟随本地: git push origin master --force-with-lease
+然后同步 GitHub：git push github master:main --force-with-lease
+如果 --force-with-lease 仍然失败:
+git fetch origin
+再：git push origin master --force-with-lease
