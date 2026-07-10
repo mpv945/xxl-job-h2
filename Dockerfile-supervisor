@@ -13,8 +13,8 @@
 FROM eclipse-temurin:17-jdk AS jlink-builder
 
 #   --build-arg ROOT_PASSWORD=MyStrong@123 \
-ARG ROOT_PASSWORD=Root231@123456
-ENV ROOT_PASSWORD=${ROOT_PASSWORD}
+#ARG ROOT_PASSWORD=Root231@123456
+#ENV ROOT_PASSWORD=${ROOT_PASSWORD}
 
 # ======================
 # build args
@@ -136,7 +136,7 @@ RUN set -eux; \
 "" \
 "set -e" \
 "" \
-"ROOT_PASSWORD=\"${ROOT_PASSWORD}\"" \
+# "ROOT_PASSWORD=\"${ROOT_PASSWORD}\"" \
 "MYSQL_BASE=/runtime/mysql-binary" \
 "DATADIR=/runtime/mysql-binary/data/mysql" \
 #"ROOT_PASSWORD='Root@123456'" \
@@ -182,6 +182,8 @@ RUN tree -L 2 /runtime && tree -d -L 4 /runtime
 # 运行容器
 # FROM gcr.io/distroless/base-debian12
 FROM debian:12-slim
+
+ENV MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_root_password
 
 # WORKDIR /app
 
