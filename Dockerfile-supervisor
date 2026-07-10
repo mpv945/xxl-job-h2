@@ -205,5 +205,6 @@ RUN JAVA_HOME=/runtime/jre && PATH=$JAVA_HOME/bin:$PATH && \
     groupadd mysql && useradd -r -g mysql mysql && \
     mkdir -p /data/mysql && \
     # chown -R mysql:mysql /data/mysql /opt/mysql && \
+    cat /runtime/supervisor.d/supervisord.conf && \
     java -version
 
