@@ -73,7 +73,7 @@ RUN set -eux; \
     \
     MAJOR_MINOR=$(echo "$MYSQL_VERSION" | awk -F. '{print $1"."$2}'); \
     FILE="mysql-${MYSQL_VERSION}-linux-glibc${GLIBC_VER}-${MYSQL_ARCH}-minimal.tar.xz"; \
-    # FILE="mysql-${MYSQL_VERSION}-linux-glibc${GLIBC_VER}-${MYSQL_ARCH}.tar.xz"; \
+    # FILE="mysql-${MYSQL_VERSION}-linux-glibc${GLIBC_VER}-${MYSQL_ARCH}.tar.xz"; \ tar -xJf 参数说明： -J = xz  ; -z = gzip ; -j = bzip2
     URL="https://dev.mysql.com/get/Downloads/MySQL-${MAJOR_MINOR}/${FILE}"; \
     \
     echo "Downloading $URL"; \
@@ -81,7 +81,7 @@ RUN set -eux; \
     \
     cd /tmp; \
     ls -alh; \
-    tar -xf ${FILE}; \
+    tar -xJf ${FILE}; \
     \
     mv mysql-${MYSQL_VERSION}-linux-glibc${GLIBC_VER}-${MYSQL_ARCH} /runtime/mysql-binary; \
     \
