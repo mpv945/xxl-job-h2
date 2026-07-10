@@ -87,7 +87,7 @@ RUN set -eux; \
     \
     rm -f /tmp/${FILE} && ls -lah /runtime/mysql-binary
 
-# 生成mysql 启动配置
+# 生成mysql 启动配置 【查看 128 行附近： nl -ba Dockerfile | sed -n '120,135p'】
 RUN set -eux; \
     mkdir -p /runtime/mysql-binary/etc; \
     printf '%s\n' \
@@ -183,7 +183,9 @@ RUN tree -L 2 /runtime && tree -d -L 4 /runtime
 # FROM gcr.io/distroless/base-debian12
 FROM debian:12-slim
 
-ENV MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_root_password
+# docker run --secret source=mysql_root_password,target=/run/secrets/mysql_root_password  mysql:test
+#ENV MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_root_password
+# docker run --secret source=mysql_root_password,target=/run/secrets/mysql_root_password -e MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_root_password mysql:test
 
 # WORKDIR /app
 
