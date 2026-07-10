@@ -7,6 +7,8 @@
 #
 #RUN mvn clean package -DskipTests
 
+# DNS / 网络诊断缺工具: iproute2 net-tools curl
+
 # 编译最小jre 运行时
 FROM eclipse-temurin:17-jdk AS jlink-builder
 
@@ -100,7 +102,8 @@ RUN set -eux; \
 "max_connections=500" \
 "" \
 "log_error=/runtime/mysql-binary/data/mysql/error.log" \
-> /runtime/mysql-binary/etc/my.cnf
+> /runtime/mysql-binary/etc/my.cnf \
+
 
 RUN set -eux; \
     mkdir -p /runtime/supervisor.d; \
