@@ -202,6 +202,6 @@ EXPOSE 3306 8080
 RUN JAVA_HOME=/runtime/jre && PATH=$JAVA_HOME/bin:$PATH && \
     groupadd mysql && useradd -r -g mysql mysql && \
     mkdir -p /data/mysql && \
-    chown -R mysql:mysql /data/mysql /opt/mysql && \
+    # chown -R mysql:mysql /data/mysql /opt/mysql && \
     java -version
 
