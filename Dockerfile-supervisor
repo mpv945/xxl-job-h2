@@ -180,7 +180,8 @@ COPY . .
 RUN tree -L 2 /runtime && tree -d -L 4 /runtime
 
 # 运行容器
-FROM gcr.io/distroless/base-debian12
+# FROM gcr.io/distroless/base-debian12
+FROM debian:12-slim
 
 # WORKDIR /app
 
@@ -199,7 +200,7 @@ EXPOSE 3306 8080
 # 2. 创建用户
 # =========================
 RUN JAVA_HOME=/runtime/jre && PATH=$JAVA_HOME/bin:$PATH && \
-    addgroup -S mysql && adduser -S mysql -G mysql && \
+    groupadd mysql && useradd -r -g mysql mysql && \
     mkdir -p /data/mysql && \
     chown -R mysql:mysql /data/mysql /opt/mysql && \
     java -version
