@@ -19,6 +19,7 @@ jobs:
           docker build --build-arg HOST_WORK_DIR=$PROJECT_DIR \
             --build-arg MYSQL_VERSION=9.7.1 \
             --build-arg GLIBC_VER=2.28 \
+            --build-arg ROOT_PASSWORD=1qaz@WSX \
             -t "${{ github.repository }}:test" \
             -f $PROJECT_DIR/Dockerfile-supervisor \
             $PROJECT_DIR
