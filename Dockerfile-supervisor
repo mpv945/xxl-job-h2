@@ -48,7 +48,7 @@ RUN set -eux; \
         ca-certificates \
         gnupg \
         dirmngr \
-        unzip tar  \
+        unzip tar xz-utils \
         procps \
         iproute2 net-tools iputils-ping lsof tree ; \
     rm -rf /var/lib/apt/lists/* ; \
