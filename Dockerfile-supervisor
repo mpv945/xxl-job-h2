@@ -80,10 +80,10 @@ RUN set -eux; \
     wget -O /tmp/${FILE} "$URL"; \
     \
     cd /tmp; \
-    ls -alh; \
     tar -xJf ${FILE}; \
     \
-    mv mysql-${MYSQL_VERSION}-linux-glibc${GLIBC_VER}-${MYSQL_ARCH} /runtime/mysql-binary; \
+    ls -alh; \
+    mv mysql-${MYSQL_VERSION}-linux-glibc${GLIBC_VER}-${MYSQL_ARCH}-minimal /runtime/mysql-binary; \
     \
     rm -f /tmp/${FILE} && ls -lah /runtime/mysql-binary
 
