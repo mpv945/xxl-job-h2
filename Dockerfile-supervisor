@@ -174,6 +174,69 @@ RUN set -eux; \
 > /runtime/init/init.sh; \
     chmod +x /runtime/init/init.sh
 
+
+RUN set -eux; \
+    mkdir -p /runtime/init; \
+    printf '%s\n' \
+'#!/bin/bash' \
+'' \
+'set -e' \
+'' \
+'MYSQL_HOME=/opt/mysql' \
+'MYSQL_DATA=/data/mysql' \
+'' \
+'if [ ! -d "$MYSQL_DATA/mysql" ]; then' \
+'    $MYSQL_HOME/bin/mysqld \\' \
+'        --initialize-insecure \\' \
+'        --user=mysql \\' \
+'        --basedir=$MYSQL_HOME \\' \
+'        --datadir=$MYSQL_DATA' \
+'fi' \
+> /runtime/init/entrypoint.sh; \
+chmod +x /runtime/init/entrypoint.sh
+
+
+
+RUN set -eux; \
+    mkdir -p /runtime/init; \
+    printf '%s\n' \
+'#!/bin/bash' \
+'set -e' \
+'' \
+'echo "[start] mysql..."' \
+'' \
+'$MYSQL_HOME/bin/mysqld --defaults-file=/etc/mysql/my.cnf --user=mysql &' \
+'MYSQL_PID=$!' \
+'' \
+'echo "[start] app1..."' \
+'java -jar /app/app1.jar --server.port=8080 &' \
+'APP1_PID=$!' \
+'' \
+'echo "[start] app2..."' \
+'java -jar /app/app2.jar --server.port=8081 &' \
+'APP2_PID=$!' \
+'' \
+'echo "mysql=$MYSQL_PID"' \
+'echo "app1=$APP1_PID"' \
+'echo "app2=$APP2_PID"' \
+'' \
+'shutdown() {' \
+'    echo "[stop] shutting down..."' \
+'    kill -TERM $APP1_PID 2>/dev/null || true' \
+'    kill -TERM $APP2_PID 2>/dev/null || true' \
+'    mysqladmin --socket=/tmp/mysql.sock -uroot shutdown 2>/dev/null || true' \
+'}' \
+'' \
+'trap shutdown SIGTERM SIGINT' \
+'' \
+'wait -n $MYSQL_PID $APP1_PID $APP2_PID' \
+'' \
+'echo "[exit] process stopped"' \
+'exit 1' \
+> /runtime/init/start.sh; \
+chmod +x /runtime/init/start.sh
+
+
 COPY . .
 
 # ✔ 限制层级（最常用）： tree -L 2   ✔ 显示隐藏文件： tree -a  ✔ 显示文件大小：tree -h  ✔ 排除目录：tree -I "node_modules|.git"
