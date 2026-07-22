@@ -12,13 +12,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+      - name: view Project
+        run: |
+          ls -lah xxl-job/
       - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '25'
           cache: 'maven'
           cache-dependency-path: |
-            pom.xml
+            xxl-job/pom.xml
             **/pom.xml
             **/.mvn/wrapper/maven-wrapper.properties
             **/.mvn/extensions.xml
