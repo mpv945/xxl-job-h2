@@ -1,0 +1,264 @@
+# 编译最小jre 运行时
+FROM eclipse-temurin:17-jdk AS jlink-builder
+
+# ======================
+# build args
+# ======================
+ARG MYSQL_VERSION=9.7.1
+ARG GLIBC_VER=2.28
+
+ARG TARGETARCH
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN set -eux; \
+    apt-get update ; \
+    apt-get install -y --no-install-recommends \
+        wget \
+        curl \
+        ca-certificates \
+        gnupg \
+        dirmngr \
+        unzip tar xz-utils \
+        procps \
+        iproute2 net-tools iputils-ping lsof tree ; \
+    rm -rf /var/lib/apt/lists/* ; \
+    jlink \
+      --add-modules java.base,java.logging,java.sql,java.xml \
+      --compress=2 \
+      --strip-debug \
+      --no-header-files \
+      --no-man-pages \
+      --output /runtime/jre && \
+    \
+    # ======================
+    # 架构映射 \
+    # ======================
+    if [ "$TARGETARCH" = "amd64" ]; then \
+        MYSQL_ARCH="x86_64"; \
+    elif [ "$TARGETARCH" = "arm64" ]; then \
+        MYSQL_ARCH="aarch64"; \
+    else \
+        echo "Unsupported arch: $TARGETARCH"; exit 1; \
+    fi; \
+    \
+    MAJOR_MINOR=$(echo "$MYSQL_VERSION" | awk -F. '{print $1"."$2}'); \
+    FILE="mysql-${MYSQL_VERSION}-linux-glibc${GLIBC_VER}-${MYSQL_ARCH}-minimal.tar.xz"; \
+    URL="https://dev.mysql.com/get/Downloads/MySQL-${MAJOR_MINOR}/${FILE}"; \
+    \
+    echo "Downloading $URL"; \
+    wget -O /tmp/${FILE} "$URL"; \
+    \
+    cd /tmp; \
+    tar -xJf ${FILE}; \
+    \
+    ls -alh; \
+    mv mysql-${MYSQL_VERSION}-linux-glibc${GLIBC_VER}-${MYSQL_ARCH}-minimal /runtime/mysql-binary; \
+    \
+    rm -f /tmp/${FILE} && ls -lah /runtime/mysql-binary
+
+# 生成mysql 启动配置 【查看 128 行附近： nl -ba Dockerfile | sed -n '120,135p'】
+RUN set -eux; \
+    mkdir -p /runtime/mysql-binary/etc; \
+    printf '%s\n' \
+"[mysqld]" \
+"basedir=/runtime/mysql-binary" \
+"datadir=/runtime/mysql-binary/data" \
+"port=3306" \
+"" \
+"character-set-server=utf8mb4" \
+"collation-server=utf8mb4_general_ci" \
+"" \
+"skip-name-resolve" \
+"max_connections=500" \
+"" \
+"log_error=/runtime/mysql-binary/logs/error.log" \
+> /runtime/mysql-binary/etc/my.cnf \
+
+
+RUN set -eux; \
+    mkdir -p /runtime/supervisor.d; \
+    printf '%s\n' \
+"[supervisord]" \
+"nodaemon=true" \
+"logfile=/runtime/log/supervisord.log" \
+"pidfile=/runtime/supervisord.pid" \
+"" \
+"[program:mysql]" \
+"command=/runtime/mysql-binary/bin/mysqld --defaults-file=/runtime/mysql-binary/etc/my.cnf  --user=mysql" \
+    "autostart=true" \
+"directory=/runtime/mysql-binary" \
+"autostart=true" \
+"autorestart=true" \
+"priority=10" \
+"startsecs=10" \
+"stdout_logfile=/dev/stdout" \
+"stdout_logfile_maxbytes=0" \
+"stderr_logfile=/dev/stderr" \
+"stderr_logfile_maxbytes=0" \
+"" \
+"[program:springboot1]" \
+"command=java -jar /runtime/apps/pt1/app.jar --server.port=8080" \
+"directory=/runtime/apps/pt1" \
+"autostart=true" \
+"autorestart=true" \
+"priority=20" \
+"startsecs=20" \
+"environment=JAVA_OPTS=\"-Xms512m -Xmx1024m\"" \
+"stdout_logfile=/dev/stdout" \
+"stdout_logfile_maxbytes=0" \
+"stderr_logfile=/dev/stderr" \
+"stderr_logfile_maxbytes=0" \
+> /runtime/supervisor.d/supervisord.conf
+
+# 2️⃣ 转义 $（必须注意） 例如： \$DATADIR   【否则 Docker build 阶段就会提前展开变量 ❌】
+# 3️⃣ mysqld 多行命令安全写法： "\$MYSQL_BASE/bin/mysqld \\"  👉 关键是：外层字符串用 "..." 控制；内层 $ 必须 escape
+RUN set -eux; \
+    mkdir -p /runtime/init; \
+    printf '%s\n' \
+"#!/bin/bash" \
+"" \
+"set -e" \
+"" \
+# "ROOT_PASSWORD=\"${ROOT_PASSWORD}\"" \
+"MYSQL_BASE=/runtime/mysql-binary" \
+"DATADIR=/runtime/mysql-binary/data" \
+#"ROOT_PASSWORD='Root@123456'" \
+"" \
+"echo \"[init] checking mysql data dir...\"" \
+"" \
+"if [ ! -d \"\$DATADIR\" ]; then" \
+"  echo \"[init] initializing mysql...\"" \
+"  \$MYSQL_BASE/bin/mysqld \\" \
+"    --initialize-insecure \\" \
+"    --user=mysql \\" \
+"    --basedir=\$MYSQL_BASE \\" \
+"    --datadir=\$DATADIR" \
+"" \
+"  echo \"[init] starting temporary mysql...\"" \
+"  \$MYSQL_BASE/bin/mysqld --user=mysql --datadir=\$DATADIR --skip-networking --socket=/tmp/mysql.sock &" \
+"" \
+"  pid=\$!" \
+"  sleep 5" \
+"" \
+"  echo \"[init] setting root password...\"" \
+"  \$MYSQL_BASE/bin/mysql --socket=/tmp/mysql.sock -uroot <<EOF" \
+"ALTER USER 'root'@'localhost' IDENTIFIED BY '\$ROOT_PASSWORD';" \
+"CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY '\$ROOT_PASSWORD';" \
+"GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;" \
+"FLUSH PRIVILEGES;" \
+"EOF" \
+"" \
+"  echo \"[init] shutting down temporary mysql...\"" \
+"  kill \$pid || true" \
+"fi" \
+"" \
+"echo \"[init] starting supervisor...\"" \
+"exec /usr/bin/supervisord -c /runtime/supervisor.d/supervisord.conf" \
+> /runtime/init/init.sh; \
+    chmod +x /runtime/init/init.sh
+
+
+RUN set -eux; \
+    mkdir -p /runtime/init; \
+    printf '%s\n' \
+'#!/bin/bash' \
+'' \
+'set -e' \
+'' \
+'MYSQL_HOME=/opt/mysql' \
+'MYSQL_DATA=/data/mysql' \
+'' \
+'if [ ! -d "$MYSQL_DATA/mysql" ]; then' \
+'    $MYSQL_HOME/bin/mysqld \\' \
+'        --initialize-insecure \\' \
+'        --user=mysql \\' \
+'        --basedir=$MYSQL_HOME \\' \
+'        --datadir=$MYSQL_DATA' \
+'fi' \
+> /runtime/init/entrypoint.sh; \
+chmod +x /runtime/init/entrypoint.sh
+
+
+
+RUN set -eux; \
+    mkdir -p /runtime/init; \
+    printf '%s\n' \
+'#!/bin/bash' \
+'set -e' \
+'' \
+'echo "[start] mysql..."' \
+'' \
+'$MYSQL_HOME/bin/mysqld --defaults-file=/etc/mysql/my.cnf --user=mysql &' \
+'MYSQL_PID=$!' \
+'' \
+'echo "[start] app1..."' \
+'java -jar /app/app1.jar --server.port=8080 &' \
+'APP1_PID=$!' \
+'' \
+'echo "[start] app2..."' \
+'java -jar /app/app2.jar --server.port=8081 &' \
+'APP2_PID=$!' \
+'' \
+'echo "mysql=$MYSQL_PID"' \
+'echo "app1=$APP1_PID"' \
+'echo "app2=$APP2_PID"' \
+'' \
+'shutdown() {' \
+'    echo "[stop] shutting down..."' \
+'    kill -TERM $APP1_PID 2>/dev/null || true' \
+'    kill -TERM $APP2_PID 2>/dev/null || true' \
+'    mysqladmin --socket=/tmp/mysql.sock -uroot shutdown 2>/dev/null || true' \
+'}' \
+'' \
+'trap shutdown SIGTERM SIGINT' \
+'' \
+'wait -n $MYSQL_PID $APP1_PID $APP2_PID' \
+'' \
+'echo "[exit] process stopped"' \
+'exit 1' \
+> /runtime/init/start.sh; \
+chmod +x /runtime/init/start.sh
+
+
+COPY . .
+
+# ✔ 限制层级（最常用）： tree -L 2   ✔ 显示隐藏文件： tree -a  ✔ 显示文件大小：tree -h  ✔ 排除目录：tree -I "node_modules|.git"
+RUN tree -L 2 /runtime && tree -d -L 4 /runtime
+
+# 运行容器
+# FROM gcr.io/distroless/base-debian12
+FROM debian:12-slim
+
+# docker run --secret source=mysql_root_password,target=/run/secrets/mysql_root_password  mysql:test
+#ENV MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_root_password
+# docker run --secret source=mysql_root_password,target=/run/secrets/mysql_root_password -e MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_root_password mysql:test
+
+# WORKDIR /app
+
+# 复制最小 JRE
+COPY --from=jlink-builder /runtime /runtime
+
+# ENV JAVA_HOME=/runtime/jre
+# ENV PATH=$JAVA_HOME/bin:$PATH
+
+# =========================
+# 暴露端口
+# =========================
+EXPOSE 3306 8080
+
+# =========================
+# 2. 创建用户
+# =========================
+RUN JAVA_HOME=/runtime/jre && PATH=$JAVA_HOME/bin:$PATH && \
+    groupadd mysql && useradd -r -g mysql mysql && \
+    mkdir -p /data/mysql && \
+    # chown -R mysql:mysql /data/mysql /opt/mysql && \
+    java -version
+
+RUN  cat /runtime/supervisor.d/supervisord.conf
+
+RUN  cat /runtime/mysql-binary/etc/my.cnf
+
+RUN cat /runtime/init/init.sh
+
