@@ -31,9 +31,12 @@ jobs:
             **/.mvn/extensions.xml
       - name: Build with Maven
         run: |
-          #  mvn -f pom.xml clean package -pl module-a -am [-pl module-a：构建指定模块 -am：同时构建依赖模块]  -Pprod -DskipTests
-          mvn -f xxl-job/pom.xml clean package -Dmaven.test.skip=true
-          ls -alh
+          #  mvn -f pom.xml clean package -pl module-a -am [-pl module-a：构建指定模块 -am：同时构建依赖模块]  -Pprod -DskipTests [多模块-pl common,service-a,service-b】
+          # 使用模块路径 mvn clean packag -pl ./common,./service-a,./service-b
+          mvn -f xxl-job/pom.xml clean package -pl ./xxl-job-admin,./xxl-job-executor-samples/xxl-job-executor-sample-springboot -am -Dmaven.test.skip=true
+      - name: view Project
+        run: |
+          ls -alh xxl-job/
       # --platform=linux/arm64 ARM64（M1 / ARM服务器）  linux/amd64  【# --build-arg ROOT_PASSWORD=1qaz@WSX \】
       - name: Build
         run: |
