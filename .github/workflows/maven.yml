@@ -61,7 +61,8 @@ jobs:
             if jar tf "$jar" | grep -q "^BOOT-INF/"; then
               filename=$(basename "$jar")
               echo "Found Spring Boot jar: $jar"
-              cp "$jar" "./docker/appp$index/$filename"
+              mkdir -p ./apps/app$index
+              cp "$jar" "./apps/app$index/$filename"
               echo "Copied: ./apps/app$index/$filename"
               index=$((index+1))
             fi
