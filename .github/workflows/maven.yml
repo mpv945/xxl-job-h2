@@ -40,8 +40,35 @@ jobs:
           ls -alh xxl-job/xxl-job-admin/target/*.jar
           ls -alh xxl-job/xxl-job-executor-samples/xxl-job-executor-sample-springboot/target/*.jar
       # --platform=linux/arm64 ARM64（M1 / ARM服务器）  linux/amd64  【# --build-arg ROOT_PASSWORD=1qaz@WSX \】
+      #- name: Prepare docker context
+      #  run: |
+      #    cp \
+      #    $(find xxl-job/xxl-job-admin/target \
+      #    -name "*.jar" \
+      #    ! -name "*sources.jar" \
+      #    ! -name "*javadoc.jar") \
+      #    docker/app.jar
+      - name: Prepare application jars
+        shell: bash
+        run: |
+          set -euo pipefail
+          index=1
+          find . -maxdepth 4 -type f -name "*.jar" \
+            ! -name "*-sources*.jar" \
+            ! -name "*-javadoc*.jar" \
+            | while IFS= read -r jar
+          do
+            if jar tf "$jar" | grep -q "^BOOT-INF/"; then
+              filename=$(basename "$jar")
+              echo "Found Spring Boot jar: $jar"
+              cp "$jar" "./docker/appp$index/$filename"
+              echo "Copied: ./apps/app$index/$filename"
+              index=$((index+1))
+            fi
+          done
       - name: Build
         run: |
+          ls -alh ./apps/
           export PROJECT_DIR=$GITHUB_WORKSPACE
           docker build --build-arg HOST_WORK_DIR=$PROJECT_DIR \
             --build-arg MYSQL_VERSION=9.7.1 \
