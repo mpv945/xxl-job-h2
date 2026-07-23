@@ -81,12 +81,12 @@ RUN set -eux; \
     printf '%s\n' \
 "[supervisord]" \
 "nodaemon=true" \
-"logfile=/runtime/log/supervisord.log" \
-"pidfile=/runtime/supervisord.pid" \
+"logfile=/runtime/supervisor.d/supervisord.log" \
+"pidfile=/runtime/supervisor.d/supervisord.pid" \
 "" \
 "[program:mysql]" \
 "command=/runtime/mysql-binary/bin/mysqld --defaults-file=/runtime/mysql-binary/etc/my.cnf  --user=mysql" \
-    "autostart=true" \
+"autostart=true" \
 "directory=/runtime/mysql-binary" \
 "autostart=true" \
 "autorestart=true" \
