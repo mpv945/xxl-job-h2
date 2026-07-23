@@ -34,7 +34,7 @@ jobs:
           #  mvn -f pom.xml clean package -pl module-a -am [-pl module-a：构建指定模块 -am：同时构建依赖模块]  -Pprod -DskipTests [多模块-pl common,service-a,service-b】
           # 使用模块路径 mvn clean packag -pl ./common,./service-a,./service-b
           # 排除模块 mvn package -pl '!web,!test'
-          mvn -f xxl-job/pom.xml clean package -pl ./xxl-job-admin,./xxl-job-executor-samples/xxl-job-executor-sample-springboot -am -Dmaven.test.skip=true
+          mvn -f xxl-job/pom.xml clean package -pl ./xxl-job-admin,./xxl-job-executor-samples/xxl-job-executor-sample-springboot -am -Dmaven.test.skip=true -Dmaven.javadoc.skip=true
       - name: view Build Project
         run: |
           ls -alh xxl-job/xxl-job-admin/target/*.jar
