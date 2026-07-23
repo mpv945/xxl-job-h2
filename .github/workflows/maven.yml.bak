@@ -1,7 +1,7 @@
 name: Sync Gitee to GitHub
 on:
   push:
-    branches: [ main, master, '*' ]
+    branches: [ main1, master1, '*11' ]
   workflow_dispatch:
 
 jobs:
