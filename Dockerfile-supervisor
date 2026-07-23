@@ -237,7 +237,8 @@ RUN set -eux; \
 chmod +x /runtime/init/start.sh
 
 
-COPY . .
+# COPY . .
+COPY apps/ /runtime/apps/
 
 # ✔ 限制层级（最常用）： tree -L 2   ✔ 显示隐藏文件： tree -a  ✔ 显示文件大小：tree -h  ✔ 排除目录：tree -I "node_modules|.git"
 RUN tree -L 2 /runtime && tree -d -L 4 /runtime
@@ -276,5 +277,5 @@ RUN  cat /runtime/supervisor.d/supervisord.conf
 
 RUN  cat /runtime/mysql-binary/etc/my.cnf
 
-RUN cat /runtime/init/init.sh
+RUN cat /runtime/init/init.sh && ls -alh  /runtime/apps
 
