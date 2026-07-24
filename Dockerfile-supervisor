@@ -276,15 +276,15 @@ COPY --from=jlink-builder \
 # 本机安装： 不然报错/runtime/mysql-binary/bin/mysqld: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.38' not found (required by /lib/x86_64-linux-gnu/libnuma.so.1)
 #COPY --from=jlink-builder    /lib/x86_64-linux-gnu/libnuma.so.1 /lib/x86_64-linux-gnu/
 
-COPY --from=jlink-builder \
-    /lib/x86_64-linux-gnu/libncurses.so.6 \
-    /lib/x86_64-linux-gnu/
+#COPY --from=jlink-builder \
+#    /lib/x86_64-linux-gnu/libncurses.so.6 \
+#    /lib/x86_64-linux-gnu/
 
 RUN ldd /runtime/mysql-binary/bin/mysqld | grep "not found"
 RUN ldd /runtime/mysql-binary/bin/mysql | grep "not found"
 RUN apt-get update && \
     apt-get install -y --no-install-recommends supervisor bash \
-    libnuma1 \
+    libnuma1 libncurses6 \
     gettext-base && \
     JAVA_HOME=/runtime/jre && PATH=$JAVA_HOME/bin:$PATH && \
     groupadd mysql && useradd -r -g mysql mysql && \
