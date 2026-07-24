@@ -177,7 +177,7 @@ RUN set -eux; \
 # 2️⃣ 转义 $（必须注意） 例如： \$DATADIR   【否则 Docker build 阶段就会提前展开变量 ❌】
 # 3️⃣ mysqld 多行命令安全写法： "\$MYSQL_BASE/bin/mysqld \\"  👉 关键是：外层字符串用 "..." 控制；内层 $ 必须 escape
 RUN set -eux; \
-    mkdir -p /runtime/mysql-binary; /runtime/mysql-binary/logs; \
+    mkdir -p /runtime/mysql-binary; mkdir -p /runtime/mysql-binary/logs; \
     printf '%s\n' \
 "#!/bin/bash" \
 "" \
