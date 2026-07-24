@@ -57,6 +57,7 @@ RUN set -eux; \
         apt-get install -y --no-install-recommends libaio1; \
     else \
         apt-get install -y --no-install-recommends libaio1t64; \
+        ln -s /lib/x86_64-linux-gnu/libaio.so.1t64 /lib/x86_64-linux-gnu/libaio.so.1; \
     fi; \
     ls -l /lib/x86_64-linux-gnu/libaio* ; \
     rm -rf /var/lib/apt/lists/* ; \
