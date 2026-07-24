@@ -110,8 +110,8 @@ RUN set -eux; \
     mkdir -p /runtime/mysql-binary/etc; \
     printf '%s\n' \
 "[mysqld]" \
-"basedir=/opt/mysql" \
-"datadir=/data/mysql" \
+"basedir=/runtime/mysql-binary" \
+"datadir=/runtime/mysql-binary/data" \
 "port=3306" \
 "" \
 "character-set-server=utf8mb4" \
@@ -265,7 +265,7 @@ RUN apt-get update && \
     mkdir -p /data/mysql && \
     chown -R mysql:mysql /runtime/mysql-binary /runtime/mysql-binary/logs && \
     java -version && \
-    rm -rf /var/lib/apt/lists/* \
+    rm -rf /var/lib/apt/lists/*
 
 RUN  cat /runtime/supervisor.d/supervisord.conf
 
