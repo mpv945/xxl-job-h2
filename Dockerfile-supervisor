@@ -274,7 +274,7 @@ EXPOSE 3306 8080
 #    /lib/x86_64-linux-gnu/
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+    apt-get install -y --no-install-recommends supervisor bash \
         libaio1 \
         libnuma1 \
         libncurses6 \
