@@ -50,10 +50,15 @@ RUN set -eux; \
         dirmngr \
         unzip tar xz-utils \
         procps \
-        libaio1 \
         libnuma1 \
         libncurses6 \
         iproute2 net-tools iputils-ping lsof tree ; \
+    if apt-cache show libaio1 >/dev/null 2>&1; then \
+        apt-get install -y --no-install-recommends libaio1; \
+    else \
+        apt-get install -y --no-install-recommends libaio1t64; \
+    fi; \
+    ls -l /lib/x86_64-linux-gnu/libaio* ; \
     rm -rf /var/lib/apt/lists/* ; \
     jlink \
       --add-modules java.base,java.logging,java.sql,java.xml \
