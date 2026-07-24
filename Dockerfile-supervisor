@@ -260,7 +260,12 @@ EXPOSE 3306 8080
 # 2. 创建用户  安装 supervisor bash  或者  tini bash  【gettext-base 包含 envsubst】
 # =========================
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends supervisor bash gettext-base && \
+    apt-get install -y --no-install-recommends supervisor bash \
+        libaio1 \
+        libnuma1 \
+        libssl3 \
+        zlib1g \
+        gettext-base && \
     JAVA_HOME=/runtime/jre && PATH=$JAVA_HOME/bin:$PATH && \
     groupadd mysql && useradd -r -g mysql mysql && \
     mkdir -p /data/mysql && \
