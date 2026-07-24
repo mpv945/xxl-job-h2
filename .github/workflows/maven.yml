@@ -67,11 +67,11 @@ jobs:
               index=$((index+1))
             fi
           done
-      - name: Clean docker cache
-        run: |
-          docker system prune -af
-          docker builder prune
-          docker system df
+#      - name: Clean docker cache
+#        run: |
+#          docker system prune -af
+#          docker builder prune
+#          docker system df
       - name: Build
         run: |
           ls -alh ./apps/
