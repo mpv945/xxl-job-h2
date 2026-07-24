@@ -184,7 +184,7 @@ RUN set -eux; \
 "set -e" \
 "" \
 "export ROOT_PASSWORD=\${ROOT_PASSWORD:-Root@123456}" \
-"echo \"数据库密码：$ROOT_PASSWORD\"" \
+"echo \"数据库密码：\$ROOT_PASSWORD\"" \
 "envsubst < /runtime/mysql-binary/etc/my.cnf.tpl > /runtime/mysql-binary/etc/my_1.cnf" \
 "MYSQL_BASE=/runtime/mysql-binary" \
 "DATADIR=/runtime/mysql-binary/data" \
@@ -266,9 +266,9 @@ RUN apt-get update && \
     mkdir -p /data/mysql && \
     chown -R mysql:mysql /runtime/mysql-binary /runtime/mysql-binary/logs && \
     rm -rf /var/lib/apt/lists/* && \
-    java -version
+    java -version && bash /runtime/mysql-binary/init.sh
 
-RUN  cat /runtime/supervisor.d/supervisord.conf
+#RUN  cat /runtime/supervisor.d/supervisord.conf
 
 #RUN  cat /runtime/mysql-binary/etc/my.cnf
 
