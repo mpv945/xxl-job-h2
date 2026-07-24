@@ -259,17 +259,10 @@ EXPOSE 3306 8080
 # =========================
 # 2. 创建用户  安装 supervisor bash  或者  tini bash  【gettext-base 包含 envsubst】
 # =========================
+RUN ldd /runtime/mysql-binary/bin/mysqld | grep "not found"
+RUN ldd /runtime/mysql-binary/bin/mysql | grep "not found"
 RUN apt-get update && \
     apt-get install -y --no-install-recommends supervisor bash \
-    libaio1 \
-    libnuma1 \
-    libncurses6 \
-    libtinfo6 \
-    libssl3 \
-    libstdc++6 \
-    zlib1g \
-    ca-certificates \
-    procps \
     gettext-base && \
     JAVA_HOME=/runtime/jre && PATH=$JAVA_HOME/bin:$PATH && \
     groupadd mysql && useradd -r -g mysql mysql && \
