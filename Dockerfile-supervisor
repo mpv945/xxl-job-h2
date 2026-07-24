@@ -50,6 +50,9 @@ RUN set -eux; \
         dirmngr \
         unzip tar xz-utils \
         procps \
+        libaio1 \
+        libnuma1 \
+        libncurses6 \
         iproute2 net-tools iputils-ping lsof tree ; \
     rm -rf /var/lib/apt/lists/* ; \
     jlink \
@@ -259,6 +262,19 @@ EXPOSE 3306 8080
 # =========================
 # 2. 创建用户  安装 supervisor bash  或者  tini bash  【gettext-base 包含 envsubst】
 # =========================
+# ldd找到缺少库，上游安装：libaio1，libnuma1，libncurses6
+COPY --from=jlink-builder \
+    /lib/x86_64-linux-gnu/libaio.so.1 \
+    /lib/x86_64-linux-gnu/
+
+COPY --from=jlink-builder \
+    /lib/x86_64-linux-gnu/libnuma.so.1 \
+    /lib/x86_64-linux-gnu/
+
+COPY --from=jlink-builder \
+    /lib/x86_64-linux-gnu/libncurses.so.6 \
+    /lib/x86_64-linux-gnu/
+
 RUN ldd /runtime/mysql-binary/bin/mysqld | grep "not found"
 RUN ldd /runtime/mysql-binary/bin/mysql | grep "not found"
 RUN apt-get update && \
