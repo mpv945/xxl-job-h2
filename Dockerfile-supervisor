@@ -271,7 +271,7 @@ RUN  cat /runtime/supervisor.d/supervisord.conf
 
 RUN  cat /runtime/mysql-binary/etc/my.cnf
 
-RUN cat /runtime/init/init.sh && ls -alh  /runtime/apps
+RUN cat /runtime/mysql-binary/init.sh && ls -alh  /runtime/apps
 
 # CMD ["/runtime/mysql-binary/init.sh"]
 
