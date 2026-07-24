@@ -288,8 +288,19 @@ RUN apt-get update && \
 #    /lib/x86_64-linux-gnu/libncurses.so.6 \
 #    /lib/x86_64-linux-gnu/
 
-RUN ldd /runtime/mysql-binary/bin/mysqld | grep "not found"
-RUN ldd /runtime/mysql-binary/bin/mysql | grep "not found"
+#RUN ldd /runtime/mysql-binary/bin/mysqld | grep "not found"
+#RUN ldd /runtime/mysql-binary/bin/mysql | grep "not found"
+RUN set -eux; \
+    echo "Checking MySQL dependencies..."; \
+    ldd /runtime/mysql-binary/bin/mysqld; \
+    ldd /runtime/mysql-binary/bin/mysql; \
+    if ldd /runtime/mysql-binary/bin/mysqld | grep -q "not found"; then \
+        exit 1; \
+    fi; \
+    if ldd /runtime/mysql-binary/bin/mysql | grep -q "not found"; then \
+        exit 1; \
+    fi
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends supervisor bash \
     gettext-base && \
