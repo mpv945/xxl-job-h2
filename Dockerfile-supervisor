@@ -266,9 +266,9 @@ RUN apt-get update && \
     mkdir -p /data/mysql && \
     chown -R mysql:mysql /runtime/mysql-binary /runtime/mysql-binary/logs && \
     rm -rf /var/lib/apt/lists/* && \
-    java -version && bash /runtime/mysql-binary/init.sh
+    java -version
 
-#RUN  cat /runtime/supervisor.d/supervisord.conf
+RUN  cat /runtime/supervisor.d/supervisord.conf
 
 #RUN  cat /runtime/mysql-binary/etc/my.cnf
 
