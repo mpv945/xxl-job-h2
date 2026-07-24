@@ -10,7 +10,7 @@
 # DNS / 网络诊断缺工具: iproute2 net-tools curl
 
 # 编译最小jre 运行时
-FROM eclipse-temurin:17-jdk AS jlink-builder
+FROM eclipse-temurin:25 AS jlink-builder
 
 #   --build-arg ROOT_PASSWORD=MyStrong@123 \
 #ARG ROOT_PASSWORD=Root231@123456
