@@ -184,6 +184,7 @@ RUN set -eux; \
 "set -e" \
 "" \
 "export ROOT_PASSWORD=\${ROOT_PASSWORD:-Root@123456}" \
+"echo \"数据库密码：$ROOT_PASSWORD\"" \
 "envsubst < /runtime/mysql-binary/etc/my.cnf.tpl > /runtime/mysql-binary/etc/my_1.cnf" \
 "MYSQL_BASE=/runtime/mysql-binary" \
 "DATADIR=/runtime/mysql-binary/data" \
@@ -247,8 +248,8 @@ ENV ROOT_PASSWORD=${ROOT_PASSWORD}
 # 复制最小 JRE
 COPY --from=jlink-builder /runtime /runtime
 
-# ENV JAVA_HOME=/runtime/jre
-# ENV PATH=$JAVA_HOME/bin:$PATH
+ENV JAVA_HOME=/runtime/jre
+ENV PATH=$JAVA_HOME/bin:$PATH
 
 # =========================
 # 暴露端口
@@ -264,14 +265,14 @@ RUN apt-get update && \
     groupadd mysql && useradd -r -g mysql mysql && \
     mkdir -p /data/mysql && \
     chown -R mysql:mysql /runtime/mysql-binary /runtime/mysql-binary/logs && \
-    java -version && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    java -version && bash /runtime/mysql-binary/init.sh
 
-RUN  cat /runtime/supervisor.d/supervisord.conf
+#RUN  cat /runtime/supervisor.d/supervisord.conf
 
-RUN  cat /runtime/mysql-binary/etc/my.cnf
+#RUN  cat /runtime/mysql-binary/etc/my.cnf
 
-RUN cat /runtime/mysql-binary/init.sh && ls -alh  /runtime/apps
+#RUN cat /runtime/mysql-binary/init.sh && ls -alh  /runtime/apps
 
-# CMD ["/runtime/mysql-binary/init.sh"]
+CMD ["/runtime/mysql-binary/init.sh"]
 
