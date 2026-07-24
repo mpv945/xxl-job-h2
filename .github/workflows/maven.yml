@@ -67,11 +67,18 @@ jobs:
               index=$((index+1))
             fi
           done
+      - name: Clean docker cache
+        run: |
+          docker system prune -af
+          docker builder prune
+          docker system df
       - name: Build
         run: |
           ls -alh ./apps/
           export PROJECT_DIR=$GITHUB_WORKSPACE
           docker build --build-arg HOST_WORK_DIR=$PROJECT_DIR \
+            --no-cache \
+            --progress=plain \
             --build-arg MYSQL_VERSION=9.7.1 \
             --build-arg GLIBC_VER=2.28 \
             -t "${{ github.repository }}:latest" \
