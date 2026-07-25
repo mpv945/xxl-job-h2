@@ -285,7 +285,7 @@ RUN set -eux; \
 
 RUN set -eux; \
     mkdir /runtime/lib; \
-    cp /lib/x86_64-linux-gnu/libaio.so.1 /runtime/lib/; \
+    cp /lib/x86_64-linux-gnu/libaio.so.1 /runtime/lib/libaio.so.1; \
     cp /lib/x86_64-linux-gnu/libnuma.so.1 /runtime/lib/; \
     cp /lib/x86_64-linux-gnu/libncurses.so.6 /runtime/lib/
 
@@ -362,7 +362,7 @@ RUN apt-get update && \
     mkdir -p /data/mysql && \
     chown -R mysql:mysql /runtime/mysql-binary /runtime/mysql-binary/logs && \
     rm -rf /var/lib/apt/lists/* && \
-    mv /runtime/lib/ /lib/x86_64-linux-gnu/ && java -version && bash /runtime/mysql-binary/init.sh
+    ls -alh /runtime/lib/ && mv /runtime/lib/ /lib/x86_64-linux-gnu/ && java -version && bash /runtime/mysql-binary/init.sh
 
 #RUN  cat /runtime/supervisor.d/supervisord.conf
 
