@@ -51,6 +51,7 @@ RUN set -eux; \
         dirmngr \
         unzip tar xz-utils \
         procps \
+        binutils \
         iproute2 net-tools iputils-ping lsof tree ; \
     mkdir /runtime; \
     if apt-cache show libaio1 >/dev/null 2>&1; then \
