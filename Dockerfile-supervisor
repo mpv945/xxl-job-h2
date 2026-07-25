@@ -292,7 +292,8 @@ COPY apps/ /runtime/apps/
 # 应用1
 # --spring.config.additional-location=/runtime/config/
 RUN set -eux; \
-    mkdir -p /runtime/apps/app1/{config,logs}; \
+    mkdir /runtime/apps/app1/config \
+    /runtime/apps/app1/logs; \
     printf '%s\n' \
 "JAVA_OPTS=\"" \
 "-Xms512m" \
@@ -330,7 +331,8 @@ RUN set -eux; \
 
 # 应用2
 RUN set -eux; \
-    mkdir -p /runtime/apps/app2/{config,logs}; \
+    mkdir /runtime/apps/app2/config \
+    /runtime/apps/app2/logs; \
     printf '%s\n' \
 "JAVA_OPTS=\"" \
 "-Xms512m" \
