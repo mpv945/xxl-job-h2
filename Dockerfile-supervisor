@@ -10,7 +10,8 @@
 # DNS / 网络诊断缺工具: iproute2 net-tools curl
 
 # 编译最小jre 运行时
-FROM eclipse-temurin:25 AS jlink-builder
+# FROM eclipse-temurin:25 AS jlink-builder
+FROM debian:13 AS jlink-builder
 
 #   --build-arg ROOT_PASSWORD=MyStrong@123 \
 #ARG ROOT_PASSWORD=Root231@123456
@@ -59,13 +60,13 @@ RUN set -eux; \
 #    fi; \
 #    ls -l /lib/x86_64-linux-gnu/libaio* ; \
     rm -rf /var/lib/apt/lists/* ; \
-    jlink \
-      --add-modules java.base,java.logging,java.sql,java.xml \
-      --compress=2 \
-      --strip-debug \
-      --no-header-files \
-      --no-man-pages \
-      --output /runtime/jre && \
+#    jlink \
+#      --add-modules java.base,java.logging,java.sql,java.xml \
+#      --compress=2 \
+#      --strip-debug \
+#      --no-header-files \
+#      --no-man-pages \
+#      --output /runtime/jre && \
     \
     # ======================
     # 架构映射 \
@@ -236,9 +237,48 @@ COPY apps/ /runtime/apps/
 # ✔ 限制层级（最常用）： tree -L 2   ✔ 显示隐藏文件： tree -a  ✔ 显示文件大小：tree -h  ✔ 排除目录：tree -I "node_modules|.git"
 # RUN tree -L 2 /runtime && tree -d -L 4 /runtime
 
+WORKDIR /tmp
+
+# 下载 Adoptium Temurin JDK 25
+RUN ARCH=$(dpkg --print-architecture) && \
+    if [ "$ARCH" = "amd64" ]; then \
+        JDK_ARCH="x64"; \
+    elif [ "$ARCH" = "arm64" ]; then \
+        JDK_ARCH="aarch64"; \
+    else \
+        echo "Unsupported arch: $ARCH"; \
+        exit 1; \
+    fi && \
+    curl -L \
+      -o jdk.tar.gz \
+      "https://api.adoptium.net/v3/binary/latest/25/ga/linux/${JDK_ARCH}/jdk/hotspot/normal/eclipse" && \
+    mkdir -p /opt/jdk && \
+    tar -xzf jdk.tar.gz \
+        --strip-components=1 \
+        -C /opt/jdk
+
+RUN /opt/jdk/bin/java -version
+
+RUN /opt/jdk/bin/jlink \
+    --module-path /opt/jdk/jmods \
+    --add-modules \
+        java.base,\
+        java.logging,\
+        java.naming,\
+        java.management,\
+        java.sql,\
+        java.instrument,\
+        java.security.jgss,\
+        jdk.crypto.ec \
+    --strip-debug \
+    --no-man-pages \
+    --no-header-files \
+    --compress=2 \
+    --output /runtime/jre
+
 # 运行容器
 # FROM gcr.io/distroless/base-debian12
-FROM debian:12-slim
+FROM debian:13-slim
 
 
 # docker run -e ROOT_PASSWORD=MyStrong@123 mysql:custom
@@ -301,7 +341,7 @@ EXPOSE 3306 8080
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends supervisor bash \
-    libaio1 libnuma1 libncurses6 \
+    # libaio1 libnuma1 libncurses6 \
     gettext-base && \
     JAVA_HOME=/runtime/jre && PATH=$JAVA_HOME/bin:$PATH && \
     groupadd mysql && useradd -r -g mysql mysql && \
