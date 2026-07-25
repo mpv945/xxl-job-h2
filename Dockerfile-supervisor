@@ -271,13 +271,13 @@ EXPOSE 3306 8080
 #    /lib/x86_64-linux-gnu/libaio.so.1 \
 #    /lib/x86_64-linux-gnu/
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends supervisor bash \
-        libaio1 \
-        libnuma1 \
-        libncurses6 \
-        libtinfo6 \
-    && rm -rf /var/lib/apt/lists/*
+#RUN apt-get update && \
+#    apt-get install -y --no-install-recommends supervisor bash \
+#        libaio1 \
+#        libnuma1 \
+#        libncurses6 \
+#        libtinfo6 \
+#    && rm -rf /var/lib/apt/lists/*
 
 # 本机安装： 不然报错/runtime/mysql-binary/bin/mysqld: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.38' not found (required by /lib/x86_64-linux-gnu/libnuma.so.1)
 #COPY --from=jlink-builder    /lib/x86_64-linux-gnu/libnuma.so.1 /lib/x86_64-linux-gnu/
