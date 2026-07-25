@@ -260,17 +260,11 @@ RUN ARCH=$(dpkg --print-architecture) && \
 
 RUN /opt/jdk/bin/java -version
 
-RUN /opt/jdk/bin/jlink \
+RUN set -eux; \
+    MODULES="java.base,java.logging,java.naming,java.management,java.sql,java.instrument,java.security.jgss,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"; \
+    /opt/jdk/bin/jlink \
     --module-path /opt/jdk/jmods \
-    --add-modules \
-        java.base,\
-        java.logging,\
-        java.naming,\
-        java.management,\
-        java.sql,\
-        java.instrument,\
-        java.security.jgss,\
-        jdk.crypto.ec \
+    --add-modules ${MODULES} \
     --strip-debug \
     --no-man-pages \
     --no-header-files \
