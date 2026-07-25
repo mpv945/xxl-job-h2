@@ -51,7 +51,11 @@ RUN set -eux; \
         dirmngr \
         unzip tar xz-utils \
         procps \
+        libaio1 \
+        libnuma1 \
+        libncurses6 \
         iproute2 net-tools iputils-ping lsof tree ; \
+    mkdir /runtime; \
 #    if apt-cache show libaio1 >/dev/null 2>&1; then \
 #        apt-get install -y --no-install-recommends libaio1 libnuma1 libncurses6; \
 #    else \
