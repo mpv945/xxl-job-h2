@@ -303,7 +303,7 @@ RUN set -eux; \
 "\"" \
 "" \
 "SPRING_OPTS=\"" \
-"--server.port=8081" \
+"--server.port=8080" \
 "\"" \
 > /runtime/apps/app1/config/app.env
 
