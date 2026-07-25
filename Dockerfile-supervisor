@@ -105,14 +105,25 @@ RUN set -eux; \
 "basedir=/runtime/mysql-binary" \
 "datadir=/runtime/mysql-binary/data" \
 "port=3306" \
+"socket=/runtime/mysql-binary/mysql.sock" \
 "" \
 "character-set-server=utf8mb4" \
-"collation-server=utf8mb4_general_ci" \
+"collation-server=utf8mb4_0900_ai_ci" \
 "" \
 "skip-name-resolve" \
+"skip-host-cache" \
+"skip-numa" \
 "max_connections=500" \
 "" \
-"log_error=/runtime/mysql-binary/logs/error.log" \
+"default-storage-engine=INNODB" \
+"innodb_buffer_pool_size=1G" \
+"innodb_log_file_size=256M" \
+"innodb_flush_method=O_DIRECT" \
+"innodb_flush_log_at_trx_commit=1" \
+"max_allowed_packet=64M" \
+"slow_query_log=ON" \
+"long_query_time=2" \
+"log_error=/dev/stderr" \
 > /runtime/mysql-binary/etc/my.cnf
 
 
@@ -272,6 +283,12 @@ RUN set -eux; \
     --compress=2 \
     --output /runtime/jre
 
+RUN set -eux; \
+    mkdir /runtime/lib; \
+    cp /lib/x86_64-linux-gnu/libaio.so.1 /runtime/lib/; \
+    cp /lib/x86_64-linux-gnu/libnuma.so.1 /runtime/lib/; \
+    cp /lib/x86_64-linux-gnu/libncurses.so.6 /runtime/lib/
+
 # 运行容器
 # FROM gcr.io/distroless/base-debian12
 FROM debian:13-slim
@@ -303,9 +320,16 @@ EXPOSE 3306 8080
 # 2. 创建用户  安装 supervisor bash  或者  tini bash  【gettext-base 包含 envsubst】
 # =========================
 # ldd找到缺少库，上游安装：libaio1，libnuma1，libncurses6
-COPY --from=jlink-builder \
-    /lib/x86_64-linux-gnu/libaio.so.1 \
-    /lib/x86_64-linux-gnu/
+#COPY --from=jlink-builder \
+#    /lib/x86_64-linux-gnu/libaio.so.1 \
+#    /lib/x86_64-linux-gnu/
+
+# 本机安装： 不然报错/runtime/mysql-binary/bin/mysqld: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.38' not found (required by /lib/x86_64-linux-gnu/libnuma.so.1)
+#COPY --from=jlink-builder    /lib/x86_64-linux-gnu/libnuma.so.1 /lib/x86_64-linux-gnu/
+
+#COPY --from=jlink-builder \
+#    /lib/x86_64-linux-gnu/libncurses.so.6 \
+#    /lib/x86_64-linux-gnu/
 
 #RUN apt-get update && \
 #    apt-get install -y --no-install-recommends supervisor bash \
@@ -315,13 +339,7 @@ COPY --from=jlink-builder \
 #        libtinfo6 \
 #    && rm -rf /var/lib/apt/lists/*
 
-# 本机安装： 不然报错/runtime/mysql-binary/bin/mysqld: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.38' not found (required by /lib/x86_64-linux-gnu/libnuma.so.1)
-COPY --from=jlink-builder    /lib/x86_64-linux-gnu/libnuma.so.1 /lib/x86_64-linux-gnu/
-
-COPY --from=jlink-builder \
-    /lib/x86_64-linux-gnu/libncurses.so.6 \
-    /lib/x86_64-linux-gnu/
-
+# 测试mysql缺少的依赖
 #RUN ldd /runtime/mysql-binary/bin/mysqld | grep "not found"
 #RUN ldd /runtime/mysql-binary/bin/mysql | grep "not found"
 #RUN set -eux; \
@@ -344,7 +362,7 @@ RUN apt-get update && \
     mkdir -p /data/mysql && \
     chown -R mysql:mysql /runtime/mysql-binary /runtime/mysql-binary/logs && \
     rm -rf /var/lib/apt/lists/* && \
-    java -version && bash /runtime/mysql-binary/init.sh
+    mv /runtime/lib/ /lib/x86_64-linux-gnu/ && java -version && bash /runtime/mysql-binary/init.sh
 
 #RUN  cat /runtime/supervisor.d/supervisord.conf
 
