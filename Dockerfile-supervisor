@@ -301,6 +301,7 @@ EXPOSE 3306 8080
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends supervisor bash \
+    libaio1 libnuma1 libncurses6 \
     gettext-base && \
     JAVA_HOME=/runtime/jre && PATH=$JAVA_HOME/bin:$PATH && \
     groupadd mysql && useradd -r -g mysql mysql && \
