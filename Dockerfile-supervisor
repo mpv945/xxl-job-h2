@@ -147,7 +147,50 @@ RUN set -eux; \
 "root_password=\${ROOT_PASSWORD}" \
 > /runtime/mysql-binary/etc/my.cnf.tpl
 
+RUN set -eux; \
+    mkdir -p /runtime/script; \
+    printf '%s\n' \
+"#!/bin/sh" \
+"" \
+"set -e" \
+"" \
+"echo \"[mysql] starting...\"" \
+"exec /runtime/mysql-binary/bin/mysqld \\" \
+"     --defaults-file=/runtime/mysql-binary/etc/my.cnf \\" \
+"     --user=mysql" \
+> /runtime/script/mysql-start.sh; \
+    chmod +x /runtime/script/mysql-start.sh
 
+RUN set -eux; \
+    mkdir -p /runtime/script; \
+    printf '%s\n' \
+"#!/bin/sh" \
+"" \
+"set -e" \
+"" \
+"MYSQL_PWD=\"\$MYSQL_ROOT_PASSWORD\"" \
+"MYSQL_SOCKET=/runtime/mysql-binary/mysql.sock" \
+"echo \"[mysql-check] waiting mysql...\"" \
+"for i in \$(seq 1 60)" \
+"do" \
+"    if /runtime/mysql-binary/bin/mysqladmin \\" \
+"        --socket=\${MYSQL_SOCKET} \\" \
+"        -uroot \\" \
+"        ping \\" \
+"        >/dev/null 2>&1 " \
+"    then" \
+"        echo \"[mysql-check] mysql ready\"" \
+"        exit 0" \
+"    fi" \
+"    echo \"[mysql-check] mysql not ready (\$i/60)\"" \
+"    sleep 2" \
+"done" \
+"echo \"[mysql-check] mysql timeout\"" \
+"exit 1" \
+> /runtime/script/wait-mysql.sh; \
+    chmod +x /runtime/script/wait-mysql.sh
+
+# "environment=JAVA_OPTS=\"-Xms512m -Xmx1024m\"" \
 RUN set -eux; \
     mkdir -p /runtime/supervisor.d; \
     printf '%s\n' \
@@ -157,7 +200,7 @@ RUN set -eux; \
 "pidfile=/runtime/supervisor.d/supervisord.pid" \
 "" \
 "[program:mysql]" \
-"command=/runtime/mysql-binary/bin/mysqld --defaults-file=/runtime/mysql-binary/etc/my.cnf  --user=mysql" \
+"command=/runtime/script/mysql-start.sh" \
 "autostart=true" \
 "directory=/runtime/mysql-binary" \
 "autorestart=true" \
@@ -169,26 +212,24 @@ RUN set -eux; \
 "stderr_logfile_maxbytes=0" \
 "" \
 "[program:springboot1]" \
-"command=java -jar /runtime/apps/app1/*.jar --server.port=8080" \
+"command=/runtime/apps/app1/start.sh" \
 "autostart=true" \
 "directory=/runtime/apps/app1" \
 "autorestart=true" \
 "priority=20" \
 "startsecs=20" \
-"environment=JAVA_OPTS=\"-Xms512m -Xmx1024m\"" \
 "stdout_logfile=/dev/stdout" \
 "stdout_logfile_maxbytes=0" \
 "stderr_logfile=/dev/stderr" \
 "stderr_logfile_maxbytes=0" \
 "" \
 "[program:springboot2]" \
-"command=java -jar /runtime/apps/app2/*.jar --server.port=8081" \
+"command=/runtime/apps/app2/start.sh" \
 "autostart=true" \
 "directory=/runtime/apps/app2" \
 "autorestart=true" \
 "priority=30" \
 "startsecs=30" \
-"environment=JAVA_OPTS=\"-Xms512m -Xmx1024m\"" \
 "stdout_logfile=/dev/stdout" \
 "stdout_logfile_maxbytes=0" \
 "stderr_logfile=/dev/stderr" \
@@ -221,13 +262,13 @@ RUN set -eux; \
 "    --datadir=\$DATADIR" \
 "" \
 "  echo \"[init] starting temporary mysql...\"" \
-"  \$MYSQL_BASE/bin/mysqld --user=mysql --datadir=\$DATADIR --skip-networking --socket=/tmp/mysql.sock &" \
+"  \$MYSQL_BASE/bin/mysqld --user=mysql --datadir=\$DATADIR --skip-networking --socket=/runtime/mysql-binary/mysql.sock &" \
 "" \
 "  pid=\$!" \
 "  sleep 5" \
 "" \
 "  echo \"[init] setting root password...\"" \
-"  \$MYSQL_BASE/bin/mysql --socket=/tmp/mysql.sock -uroot <<EOF" \
+"  \$MYSQL_BASE/bin/mysql --socket=/runtime/mysql-binary/mysql.sock -uroot <<EOF" \
 "ALTER USER 'root'@'localhost' IDENTIFIED BY '\$ROOT_PASSWORD';" \
 "CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY '\$ROOT_PASSWORD';" \
 "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;" \
@@ -240,12 +281,91 @@ RUN set -eux; \
 "" \
 "echo \"mysqld --user=mysql --datadir=/data/mysql --init-file=/init.sql 设置密码之前执行\"" \
 "echo \"[init] starting supervisor...\"" \
-#"exec /usr/bin/supervisord -c /runtime/supervisor.d/supervisord.conf" \
+"exec /usr/bin/supervisord -c /runtime/supervisor.d/supervisord.conf" \
 > /runtime/mysql-binary/init.sh; \
     chmod +x /runtime/mysql-binary/init.sh
 
 # COPY . .
 COPY apps/ /runtime/apps/
+
+# 配置应用启动配置和启动脚本
+# 应用1
+# --spring.config.additional-location=/runtime/config/
+RUN set -eux; \
+    mkdir -p /runtime/apps/app1/{config,logs}; \
+    printf '%s\n' \
+"JAVA_OPTS=\"" \
+"-Xms512m" \
+"-Xmx1024m" \
+"-XX:+UseG1GC" \
+"-XX:+HeapDumpOnOutOfMemoryError" \
+"-XX:HeapDumpPath=/runtime/apps/app1/logs" \
+"\"" \
+"" \
+"SPRING_OPTS=\"" \
+"--server.port=8081" \
+"\"" \
+> /runtime/apps/app1/config/app.env
+
+RUN set -eux; \
+    mkdir -p /runtime/apps/app1; \
+    printf '%s\n' \
+"#!/bin/sh" \
+"" \
+"set -e" \
+"" \
+"echo \"[app1] waiting mysql...\"" \
+"/runtime/script/wait-mysql.sh" \
+"" \
+"echo \"[app1] starting...\"" \
+". /runtime/apps/app1/config/app.env" \
+"" \
+"exec java \\" \
+"  \${JAVA_OPTS} \\" \
+"  -jar /runtime/apps/app1/*.jar \\" \
+"  \${SPRING_OPTS}" \
+"" \
+> /runtime/apps/app1/start.sh; \
+    chmod +x /runtime/apps/app1/start.sh
+
+# 应用2
+RUN set -eux; \
+    mkdir -p /runtime/apps/app2/{config,logs}; \
+    printf '%s\n' \
+"JAVA_OPTS=\"" \
+"-Xms512m" \
+"-Xmx1024m" \
+"-XX:+UseG1GC" \
+"-XX:+HeapDumpOnOutOfMemoryError" \
+"-XX:HeapDumpPath=/runtime/apps/app2/logs" \
+"\"" \
+"" \
+"SPRING_OPTS=\"" \
+"--server.port=8081" \
+"\"" \
+> /runtime/apps/app2/config/app.env
+
+RUN set -eux; \
+    mkdir -p /runtime/apps/app2; \
+    printf '%s\n' \
+"#!/bin/sh" \
+"" \
+"set -e" \
+"" \
+"echo \"[app1] waiting mysql...\"" \
+"/runtime/script/wait-mysql.sh" \
+"" \
+"echo \"[app1] starting...\"" \
+". /runtime/apps/app2/config/app.env" \
+"" \
+"exec java \\" \
+"  \${JAVA_OPTS} \\" \
+"  -jar /runtime/apps/app2/*.jar \\" \
+"  \${SPRING_OPTS}" \
+"" \
+> /runtime/apps/app2/start.sh; \
+    chmod +x /runtime/apps/app2/start.sh
+
 
 # ✔ 限制层级（最常用）： tree -L 2   ✔ 显示隐藏文件： tree -a  ✔ 显示文件大小：tree -h  ✔ 排除目录：tree -I "node_modules|.git"
 # RUN tree -L 2 /runtime && tree -d -L 4 /runtime
