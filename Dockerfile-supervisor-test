@@ -249,10 +249,11 @@ RUN set -eux; \
 "  \$MYSQL_BASE/bin/mysqld \\" \
 "    --initialize-insecure \\" \
 "    --user=mysql \\" \
-"    --defaults-file=/etc/mysql/my.cnf" \
+"    --basedir=\$MYSQL_BASE \\" \
+"    --datadir=\$DATADIR" \
 "" \
 "  echo \"[init] starting temporary mysql...\"" \
-"  \$MYSQL_BASE/bin/mysqld --user=mysql --defaults-file=/etc/mysql/my.cnf --skip-networking &" \
+"  \$MYSQL_BASE/bin/mysqld --user=mysql --datadir=\$DATADIR --skip-networking --socket=/runtime/mysql-binary/mysql.sock &" \
 "" \
 "  pid=\$!" \
 "  sleep 5" \
@@ -269,7 +270,7 @@ RUN set -eux; \
 "  kill \$pid || true" \
 "fi" \
 "" \
-"echo \"/runtime/mysql-binary/bin/mysqld --user=mysql --defaults-file=/etc/mysql/my.cnf --skip-networking --init-file=/runtime/init.sql & 设置密码之前执行\"" \
+"echo \"mysqld --user=mysql --datadir=/data/mysql --init-file=/init.sql 设置密码之前执行\"" \
 "echo \"[init] starting supervisor...\"" \
 "exec /usr/bin/supervisord -c /runtime/supervisor.d/supervisord.conf" \
 > /runtime/mysql-binary/init.sh; \
