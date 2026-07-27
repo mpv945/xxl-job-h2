@@ -281,7 +281,6 @@ RUN set -eux; \
 "" \
 "echo \"mysqld --user=mysql --datadir=/data/mysql --init-file=/init.sql 设置密码之前执行\"" \
 "echo \"[init] starting supervisor...\"" \
-"exec /usr/bin/supervisord -c /runtime/supervisor.d/supervisord.conf" \
 > /runtime/mysql-binary/init.sh; \
     chmod +x /runtime/mysql-binary/init.sh
 
