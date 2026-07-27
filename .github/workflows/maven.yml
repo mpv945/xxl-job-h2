@@ -107,6 +107,6 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
         with:
-          name: "${{ github.repository }}-image-artifact"
-          path: "${{ github.repository }}-image.tar"
+          name: "${{ github.event.repository.name }}-image-artifact"
+          path: "${{ github.event.repository.name }}-image.tar"
           # compression-level: 0
