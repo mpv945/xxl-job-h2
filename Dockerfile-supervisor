@@ -281,6 +281,7 @@ RUN set -eux; \
 "" \
 "echo \"mysqld --user=mysql --datadir=/data/mysql --init-file=/init.sql 设置密码之前执行\"" \
 "echo \"[init] starting supervisor...\"" \
+"exec /usr/bin/supervisord -c /runtime/supervisor.d/supervisord.conf" \
 > /runtime/mysql-binary/init.sh; \
     chmod +x /runtime/mysql-binary/init.sh
 
@@ -483,7 +484,7 @@ RUN apt-get update && \
     mkdir -p /data/mysql && \
     chown -R mysql:mysql /runtime/mysql-binary /runtime/mysql-binary/logs && \
     rm -rf /var/lib/apt/lists/* && \
-    cp -av /runtime/lib/*.so* /lib/x86_64-linux-gnu/ && rm -rf /runtime/lib && java -version && bash /runtime/mysql-binary/init.sh
+    cp -av /runtime/lib/*.so* /lib/x86_64-linux-gnu/ && rm -rf /runtime/lib
 
 #RUN  cat /runtime/supervisor.d/supervisord.conf
 
