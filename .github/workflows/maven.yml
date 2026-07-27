@@ -103,7 +103,7 @@ jobs:
         #  -o duckdb-python.tar # 加载：docker load -i nginx.tar
         #run: docker save duckdb-python:latest | gzip > duckdb-python.tar.gz 加载 gunzip -c nginx.tar.gz | docker load 或者 zcat nginx.tar.gz | docker load
         run: |
-          docker save -o "$IMAGE_NAME}-image.tar" "${IMAGE_NAME}:latest"  # 加载 docker load -i image.tar
+          docker save -o "$IMAGE_NAME-image.tar" "${IMAGE_NAME}:latest"  # 加载 docker load -i image.tar
           ls -alh .
       # compression-level: 0 表示不压缩，0~9，默认6, 但是还是会生成zip
       - name: Upload Artifact
