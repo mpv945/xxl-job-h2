@@ -123,7 +123,7 @@ RUN set -eux; \
 "max_allowed_packet=64M" \
 "slow_query_log=ON" \
 "long_query_time=2" \
-"log_error=/dev/stderr" \
+"log_error=/runtime/mysql-binary/error.log" \
 > /runtime/mysql-binary/etc/my.cnf
 
 
@@ -206,10 +206,6 @@ RUN set -eux; \
 "autorestart=true" \
 "priority=10" \
 "startsecs=10" \
-"stdout_logfile=/dev/stdout" \
-"stdout_logfile_maxbytes=0" \
-"stderr_logfile=/dev/stderr" \
-"stderr_logfile_maxbytes=0" \
 "" \
 "[program:springboot1]" \
 "command=/runtime/apps/app1/start.sh" \
@@ -218,10 +214,6 @@ RUN set -eux; \
 "autorestart=true" \
 "priority=20" \
 "startsecs=20" \
-"stdout_logfile=/dev/stdout" \
-"stdout_logfile_maxbytes=0" \
-"stderr_logfile=/dev/stderr" \
-"stderr_logfile_maxbytes=0" \
 "" \
 "[program:springboot2]" \
 "command=/runtime/apps/app2/start.sh" \
@@ -230,10 +222,6 @@ RUN set -eux; \
 "autorestart=true" \
 "priority=30" \
 "startsecs=30" \
-"stdout_logfile=/dev/stdout" \
-"stdout_logfile_maxbytes=0" \
-"stderr_logfile=/dev/stderr" \
-"stderr_logfile_maxbytes=0" \
 > /runtime/supervisor.d/supervisord.conf
 
 # 2️⃣ 转义 $（必须注意） 例如： \$DATADIR   【否则 Docker build 阶段就会提前展开变量 ❌】
