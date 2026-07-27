@@ -85,3 +85,18 @@ jobs:
             -f $PROJECT_DIR/Dockerfile-supervisor \
             $PROJECT_DIR
           docker images
+      - name: Export Image
+        # https://oneuptime.com/blog/post/2026-01-16-docker-export-import-images/view
+        # docker save $(docker images --format "{{.Repository}}:{{.Tag}}" | grep "my-app") -o my-apps.tar
+        #run: |
+        #  docker save duckdb-python:latest \
+        #  -o duckdb-python.tar # 加载：docker load -i nginx.tar
+        #run: docker save duckdb-python:latest | gzip > duckdb-python.tar.gz 加载 gunzip -c nginx.tar.gz | docker load 或者 zcat nginx.tar.gz | docker load
+        run: docker save -o "${{ github.repository }}-image.tar" "${{ github.repository }}:latest"  # 加载 docker load -i image.tar
+      # compression-level: 0 表示不压缩，0~9，默认6, 但是还是会生成zip
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: "${{ github.repository }}-image-artifact"
+          path: "${{ github.repository }}-image.tar"
+          # compression-level: 0
