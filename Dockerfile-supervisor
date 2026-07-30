@@ -255,12 +255,12 @@ RUN set -eux; \
 "if [ ! -d \"\$DATADIR\" ]; then" \
 "  echo \"[init] initializing mysql...\"" \
 "  \$MYSQL_BASE/bin/mysqld \\" \
-"    --defaults-file=/etc/mysql/my.cnf \\" \
+"    --defaults-file=/runtime/mysql-binary/etc/my.cnf \\" \
 "    --initialize-insecure \\" \
 "    --user=mysql" \
 "" \
 "  echo \"[init] 暂时启动 mysql 不需要网络 ...\"" \
-"  \$MYSQL_BASE/bin/mysqld --defaults-file=/etc/mysql/my.cnf --user=mysql --skip-networking &" \
+"  \$MYSQL_BASE/bin/mysqld --defaults-file=/runtime/mysql-binary/etc/my.cnf --user=mysql --skip-networking &" \
 "" \
 "  pid=\$!" \
 "  sleep 5" \
@@ -283,7 +283,7 @@ RUN set -eux; \
 "  kill \$pid || true" \
 "fi" \
 "" \
-"echo \"/runtime/mysql-binary/bin/mysqld --defaults-file=/etc/mysql/my.cnf --user=mysql --skip-networking --init-file=/runtime/init.sql & 设置密码之前执行\"" \
+"echo \"/runtime/mysql-binary/bin/mysqld --defaults-file=/runtime/mysql-binary/etc/my.cnf --user=mysql --skip-networking --init-file=/runtime/init.sql & 设置密码之前执行\"" \
 "echo \"[init] starting supervisor...\"" \
 "exec /usr/bin/supervisord -c /runtime/supervisor.d/supervisord.conf" \
 > /runtime/mysql-binary/init.sh; \
