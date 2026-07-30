@@ -265,6 +265,17 @@ RUN set -eux; \
 "  pid=\$!" \
 "  sleep 5" \
 "" \
+"  echo \"[init] 等待 mysql socket...\"" \
+"" \
+"  for i in \$(seq 1 60)" \
+"  do" \
+"      if [ -S /runtime/mysql-binary/mysql.sock ]; then" \
+"        echo \"[init] 等待 mysql ready 继续\"" \
+"        break" \
+"      fi" \
+"" \
+"      sleep 1" \
+"  done" \
 "  echo \"[init] 暂时启动成功， 连接到本地socket 登录为设置初始密码的mysql进行账号密码设置,临时启动mysql进程id=\$pid...\"" \
 "  \$MYSQL_BASE/bin/mysql --socket=/runtime/mysql-binary/mysql.sock -uroot <<EOF" \
 "ALTER USER 'root'@'localhost' IDENTIFIED BY \"\$ROOT_PASSWORD\";" \
@@ -520,4 +531,3 @@ RUN apt-get update && \
 #RUN cat /runtime/mysql-binary/init.sh && ls -alh  /runtime/apps
 
 CMD ["/runtime/mysql-binary/init.sh"]
-
