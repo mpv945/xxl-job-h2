@@ -389,6 +389,7 @@ RUN set -eux; \
 "" \
 "    while ! nc -z \$host \$port" \
 "    do" \
+"        echo \" 等待 app1 启动 \"" \
 "        sleep 2" \
 "    done" \
 "" \
@@ -396,7 +397,7 @@ RUN set -eux; \
 "}" \
 "wait_port 127.0.0.1 8080" \
 "" \
-"echo \"[app1] starting...\"" \
+"echo \"[app2] 应用启动 starting...\"" \
 ". /runtime/apps/app2/config/app.env" \
 "" \
 "exec java \\" \
@@ -516,7 +517,7 @@ EXPOSE 3306 8080
 #    fi
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends supervisor bash \
+    apt-get install -y --no-install-recommends supervisor bash netcat \
     # libaio1 libnuma1 libncurses6 \
     gettext-base && \
     JAVA_HOME=/runtime/jre && PATH=$JAVA_HOME/bin:$PATH && \
