@@ -517,7 +517,7 @@ EXPOSE 3306 8080
 #    fi
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends supervisor bash netcat \
+    apt-get install -y --no-install-recommends supervisor bash netcat-openbsd \
     # libaio1 libnuma1 libncurses6 \
     gettext-base && \
     JAVA_HOME=/runtime/jre && PATH=$JAVA_HOME/bin:$PATH && \
