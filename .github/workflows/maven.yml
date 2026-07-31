@@ -87,6 +87,9 @@ jobs:
             -t "${PROJECT_NAME}:latest" \
             -f $PROJECT_DIR/Dockerfile-supervisor \
             $PROJECT_DIR
+          # type=local 导出的不是镜像文件系统根目录，而是：当前 build 阶段（target）的输出内容: 
+          # 如果想导出完整镜像： docker buildx build -t my-image:v1 --output type=docker,dest=image.tar
+          docker buildx build -f $PROJECT_DIR/Dockerfile-supervisor -t "${PROJECT_NAME}:export" --output type=local,dest=./docker-build-artifact .
           docker images
       - name: Get repo name
         run: |
@@ -105,6 +108,7 @@ jobs:
         run: |
           docker save -o "$IMAGE_NAME-image.tar" "${IMAGE_NAME}:latest"  # 加载 docker load -i image.tar
           ls -alh .
+          ls -alh ./docker-build-artifact/
       # compression-level: 0 表示不压缩，0~9，默认6, 但是还是会生成zip
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
