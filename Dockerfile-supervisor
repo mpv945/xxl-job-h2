@@ -525,7 +525,7 @@ RUN apt-get update && \
     mkdir -p /data/mysql && \
     chown -R mysql:mysql /runtime/mysql-binary /runtime/mysql-binary/logs && \
     rm -rf /var/lib/apt/lists/* && \
-    cp -av /runtime/lib/*.so* /lib/x86_64-linux-gnu/ && rm -rf /runtime/lib
+    cp -av /runtime/lib/*.so* /lib/x86_64-linux-gnu/
 
 #RUN  cat /runtime/supervisor.d/supervisord.conf
 
