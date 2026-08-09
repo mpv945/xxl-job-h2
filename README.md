@@ -1470,7 +1470,7 @@ git fetch origin
  
  # 推送到远程
  推送两个仓库（普通）
- git push github master:main
+ git push github master:maingit commit -m "feat: 修改了子仓库的某些功能"
  git push origin master
  # 普通推送报错使用
  git push github master:main --force-with-lease

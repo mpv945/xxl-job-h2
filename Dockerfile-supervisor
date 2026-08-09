@@ -328,6 +328,7 @@ RUN set -eux; \
 "--spring.datasource.username=root" \
 "--spring.datasource.password=\${ROOT_PASSWORD}" \
 "--spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver" \
+"--spring.threads.virtual.enabled=true" \
 "\"" \
 > /runtime/apps/app1/config/app.env
 
@@ -358,8 +359,8 @@ RUN set -eux; \
     /runtime/apps/app2/logs; \
     printf '%s\n' \
 "JAVA_OPTS=\"" \
-"-Xms512m" \
-"-Xmx1024m" \
+"-Xms1024m" \
+"-Xmx81924m" \
 "-XX:+UseG1GC" \
 "-XX:+HeapDumpOnOutOfMemoryError" \
 "-XX:HeapDumpPath=/runtime/apps/app2/logs" \
@@ -367,6 +368,8 @@ RUN set -eux; \
 "" \
 "SPRING_OPTS=\"" \
 "--server.port=8081" \
+"--xxl.job.executor.ip=127.0.0.1" \
+"--spring.threads.virtual.enabled=true" \
 "\"" \
 > /runtime/apps/app2/config/app.env
 
