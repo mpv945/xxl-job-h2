@@ -1449,7 +1449,7 @@ git fetch origin
  
  
  如果存在【子仓库】中提交并推送代码
-   git submodule update --init --recursive 更新子仓库【指定子模块更新：git submodule update --remote common】
+ 主项目执行：  git submodule update --init --recursive 更新子仓库【指定子模块更新：git submodule update --remote common】
 子模块 文件   .gitmodules
 [submodule "common"]
     path = common
