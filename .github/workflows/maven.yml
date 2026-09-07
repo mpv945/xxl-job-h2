@@ -90,7 +90,7 @@ jobs:
 #          docker system df
       - name: Build
         run: |
-          ls -alh ./apps/
+          ls -alh ./apps/ && ls -alh ./apps/app1 && ls -alh ./apps/app2
           export PROJECT_DIR=$GITHUB_WORKSPACE
           docker build --build-arg HOST_WORK_DIR=$PROJECT_DIR \
             --no-cache \
