@@ -440,7 +440,7 @@ RUN /opt/jdk/bin/java -version
 RUN set -eux; \
     #完整模块：ALL-MODULE-PATH
     #MODULES="ALL-MODULE-PATH"; \
-    MODULES="java.se,jdk.unsupported,jdk.charsets,jdk.crypto.ec,jdk.localedata,jdk.zipfs"; \
+    MODULES="java.se,jdk.net,jdk.unsupported,jdk.charsets,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.localedata,jdk.zipfs"; \
     #MODULES="java.base,java.logging,java.naming,java.management,java.sql,java.instrument,java.security.jgss,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"; \
     #MODULES="java.base,java.logging,java.naming,java.management,java.sql,jdk.net,java.rmi,java.instrument,java.security.jgss,java.desktop,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"; \
     /opt/jdk/bin/jlink \
