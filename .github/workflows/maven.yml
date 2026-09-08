@@ -27,10 +27,16 @@ jobs:
       #    echo "https://oauth2:${{ secrets.GITEE_TOKEN }}@gitee.com" > ~/.git-credentials
       - name: Init submodules
         run: |
-          git submodule sync --recursive
-          git submodule update --init --force --recursive
+          # git submodule sync --recursive
+          # git submodule update --init --force --recursive
+          # git clone --depth 1 "https://oauth2:${GITEE_TOKEN}@gitee.com/mpv945/xxl-job.git" xxl-job
+          git clone --depth 1 "https://gitee.com/mpv945/xxl-job.git" xxl-job
+          ls -alh ./xxl-job/xxl-job-executor-samples/xxl-job-executor-sample-springboot/src/main/java/com/xxl/job/executor/glue/
+          cd ./xxl-job && git pull && cd ..
+          cat ./xxl-job/xxl-job-executor-samples/xxl-job-executor-sample-springboot/src/main/java/com/xxl/job/executor/glue/FullSyncDataGlueJobHandler.java
       # 也可git同步和其他方式 【记得${{ secrets.GITEE_TOKEN }} 在 Gitee 中：个人中心 → 设置 → 私人令牌 → 生成新令牌 勾选 projects 相关权限。 2. 在 GitHub Secrets 中添加 GitHub 仓库 → Settings → Secrets and variables → Actions → New repository secret 名称使用：GITEE_TOKEN
       # git clone --depth 1 "https://oauth2:${GITEE_TOKEN}@gitee.com/用户名/仓库名.git" 目标目录
+      # 指定特定提交：git clone --depth 1 --branch 提交哈希 "https://oauth2:${GITEE_TOKEN}@gitee.com/mpv945/xxl-job.git" xxl-job
       # curl -L -H "Authorization: token ${GITEE_TOKEN}" -o repo.zip "https://gitee.com/api/v5/repos/用户名/仓库名/zipball?ref=master" && unzip -q repo.zip
       - name: view Project
         run: |
