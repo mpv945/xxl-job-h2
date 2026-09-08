@@ -29,6 +29,9 @@ jobs:
         run: |
           git submodule sync --recursive
           git submodule update --init --force --recursive
+      # 也可git同步和其他方式 【记得${{ secrets.GITEE_TOKEN }} 在 Gitee 中：个人中心 → 设置 → 私人令牌 → 生成新令牌 勾选 projects 相关权限。 2. 在 GitHub Secrets 中添加 GitHub 仓库 → Settings → Secrets and variables → Actions → New repository secret 名称使用：GITEE_TOKEN
+      # git clone --depth 1 "https://oauth2:${GITEE_TOKEN}@gitee.com/用户名/仓库名.git" 目标目录
+      # curl -L -H "Authorization: token ${GITEE_TOKEN}" -o repo.zip "https://gitee.com/api/v5/repos/用户名/仓库名/zipball?ref=master" && unzip -q repo.zip
       - name: view Project
         run: |
           ls -lah xxl-job/
