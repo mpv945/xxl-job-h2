@@ -17,8 +17,18 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          submodules: recursive
+          # submodules: recursive
           # token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          persist-credentials: false
+      # 如果是私有仓库，需要在 GitHub Actions 中配置 Gitee 凭据。
+      #- name: Setup git credentials
+      #  run: |
+      #    git config --global credential.helper store
+      #    echo "https://oauth2:${{ secrets.GITEE_TOKEN }}@gitee.com" > ~/.git-credentials
+      - name: Init submodules
+        run: |
+          git submodule sync --recursive
+          git submodule update --init --force --recursive
       - name: view Project
         run: |
           ls -lah xxl-job/
