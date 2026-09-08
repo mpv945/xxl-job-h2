@@ -98,11 +98,11 @@ jobs:
             --build-arg MYSQL_VERSION=9.7.1 \
             --build-arg GLIBC_VER=2.28 \
             -t "${PROJECT_NAME}:latest" \
-            -f $PROJECT_DIR/Dockerfile-supervisor \
+            -f $PROJECT_DIR/Dockerfile-supervisor-last \
             $PROJECT_DIR
           # type=local 导出的不是镜像文件系统根目录，而是：当前 build 阶段（target）的输出内容: 
           # 如果想导出完整镜像： docker buildx build -t my-image:v1 --output type=docker,dest=image.tar
-          docker buildx build -f $PROJECT_DIR/Dockerfile-supervisor -t "${PROJECT_NAME}:export" --output type=local,dest=./docker-build-artifact .
+          docker buildx build -f $PROJECT_DIR/Dockerfile-supervisor-last -t "${PROJECT_NAME}:export" --output type=local,dest=./docker-build-artifact .
           docker images
       - name: Get repo name
         run: |
