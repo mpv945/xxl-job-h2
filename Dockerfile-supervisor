@@ -3,7 +3,6 @@
 #WORKDIR /build
 #
 #COPY . .
-#
 #RUN mvn clean package -DskipTests
 
 # DNS / 网络诊断缺工具: iproute2 net-tools curl
