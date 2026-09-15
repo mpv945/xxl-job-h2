@@ -1,6 +1,5 @@
 # 编译最小jre 运行时
 FROM eclipse-temurin:17-jdk AS jlink-builder
-
 # ======================
 # build args
 # ======================
