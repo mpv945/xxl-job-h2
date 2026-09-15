@@ -1,6 +1,5 @@
 # 打包构建
 #FROM maven:3.9-eclipse-temurin-17 AS builder
-#
 #WORKDIR /build
 #
 #COPY . .
